@@ -26,7 +26,7 @@ function MetaballsFastProgram(){
 
     this.fragmentShaderSource = `#version 300 es
         precision highp float;
-        #define RADIUS 0.1
+        #define RADIUS 0.02
 
         #define SIZE 4
 
@@ -44,13 +44,12 @@ function MetaballsFastProgram(){
             float sum;
             vec4 color;
             float s = float(SIZE);
-            int count = 0;
-            float visited[10];
+            
 
             for(float i = -3.0; i <= 3.0; i++){
                 for(float j = -3.0; j <= 3.0; j++){
-                    float i2 = vuv.x + (i +  0.5) /16.0;
-                    float j2 = vuv.y + (j + 0.5) /16.0;
+                    float i2 = vuv.x + (i +  0.5) /64.0;
+                    float j2 = vuv.y + (j + 0.5) /64.0;
                     vec4 id =  texture(positions, vec2(i2,j2));
                     if(!(i2 < 0.0 || i2 >1.0 || j2 < 0.0 || j2 > 1.0)){
                         id -= 1.0;
@@ -59,14 +58,8 @@ function MetaballsFastProgram(){
                             if(id[i] >= 0.0){
                                 vec2 v = vec2(0.0);
                                 bool test = true;
-                                for(int j = 0; j < 10; j++){
-                                    if(visited[j] == id[i]){
-                                        test = false;
-                                    }
-                                }
-                                if(test){
-                                    visited[count] = id[i];
-                                    count++;
+                                
+                                    
                                     v.y = floor(id[i] / 32.0) / 32.0;
                                     v.x = mod(id[i], 32.0) / 32.0;
                                 
@@ -77,7 +70,7 @@ function MetaballsFastProgram(){
                                     float bottom = pow((uv.x - ball.x), 2.0) + pow((uv.y - ball.y), 2.0);
                                 
                                     sum +=  pow(RADIUS, 2.0)/bottom;
-                                }
+                                
                             }
                                 
                         }
@@ -247,11 +240,19 @@ function MetaballsFastProgram(){
             id = position;
 
             vec4 p = texture(pos, position.xy/32.0);
-            p.x /= res.x/res.y;
 
-            float val = id.x + id.y  * 32.0;
+            p = p * 64.0;
+            p = floor(p);
+            p /= 64.0;
 
-            p.z = 0.0;
+
+           p.x /= res.x/res.y;
+
+           // float val = (id.x + 0.5) + id.y  * 32.0;
+
+
+
+           // p.z = val / 10000.0;
 
             
 
@@ -426,7 +427,7 @@ function MetaballsFastProgram(){
             gl.uniform1i(this.positionsUniform_current, 1);
 
 
-            gl.drawArrays(gl.POINTS, 0, 16);
+            gl.drawArrays(gl.POINTS, 0, 512);
           
             /*
             var pixels = new Float32Array(this.ballTexture.positionTexture.fb.width * this.ballTexture.positionTexture.fb.height * 4);
@@ -633,6 +634,7 @@ function MetaballsFastProgram(){
         for(var i = 0; i < this.width * this.height; i++){
 
             //data.push(0.0);
+            //data.push(0.0);
              data.push((Math.random()- 0.5) * 2.0);
 
             data.push((Math.random()- 0.5) * 2.0);
@@ -650,7 +652,9 @@ function MetaballsFastProgram(){
             
             data2.push(data[4 * i] + (Math.random()- 0.5) * 0.02);
             data2.push(data[4 * i + 1] + (Math.random()- 0.5) * 0.02);
-            data2.push(0.0);
+            //data2.push(0.0);
+            // data2.push(0.01);
+              data2.push(0.0);
             
         
             data2.push(1.0);
@@ -662,7 +666,7 @@ function MetaballsFastProgram(){
         this.texture3 = createRenderTarget(this.width, this.height, data); 
         this.texture4 = createRenderTarget(this.width, this.height, data);        
 
-        var size = 16;
+        var size = 64;
         this.positionTexture = createRenderTarget(size, size, null);
         this.positionTexture2 = createRenderTarget(size, size, null);
         this.positionTexture3 = createRenderTarget(size, size, null);
