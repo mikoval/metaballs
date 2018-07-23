@@ -520,7 +520,7 @@ function MetaballsFastProgram(){
     }
 
     this.init = function(){
-        this.display = false;
+        this.display = true;
         this.width = window.innerWidth;
         this.height = window.innerHeight;
 
