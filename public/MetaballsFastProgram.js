@@ -340,7 +340,7 @@ function MetaballsFastProgram(){
     }
 
     this.draw = function(gl){
-        //console.time();
+        console.time();
 
 
         //gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
@@ -375,8 +375,9 @@ function MetaballsFastProgram(){
         if(!this.display){
             this.showTexture(this.ballTexture.positionTexture.texture);
         }
+        console.timeEnd();
+
         
-        //console.timeEnd();
     }
    
     this.setPositions = function(){
