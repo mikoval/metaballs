@@ -26,7 +26,7 @@ function MetaballsFastProgram(){
 
     this.fragmentShaderSource = `#version 300 es
         precision highp float;
-        #define RADIUS 0.02
+        #define RADIUS 0.03
 
         #define SIZE 4
 
@@ -48,8 +48,8 @@ function MetaballsFastProgram(){
 
             for(float i = -3.0; i <= 3.0; i++){
                 for(float j = -3.0; j <= 3.0; j++){
-                    float i2 = vuv.x + (i +  0.5) /64.0;
-                    float j2 = vuv.y + (j + 0.5) /64.0;
+                    float i2 = vuv.x + (i +  0.5) /32.0;
+                    float j2 = vuv.y + (j + 0.5) /32.0;
                     vec4 id =  texture(positions, vec2(i2,j2));
                     if(!(i2 < 0.0 || i2 >1.0 || j2 < 0.0 || j2 > 1.0)){
                         id -= 1.0;
@@ -81,14 +81,14 @@ function MetaballsFastProgram(){
                 
                 }
             }
-            if(sum > 1.0){
-          
-                
-                    outColor = vec4(0.0, 0.0, 1.0, 1.0);
+            outColor = vec4(0.0, 0.0, 0.0, 1.0);
+                if(sum > 1.0){
+                    float v = smoothstep(1.0, 1.5, sum);
+                    outColor = vec4(v, 0.3 * v, 0.5 * v, 1.0);
                 
                 
             } else{
-                outColor = vec4(0.3, 0.1, 0.1, 1.0);
+                
             }
 
             
@@ -143,7 +143,7 @@ function MetaballsFastProgram(){
         `;
 
     this.vertexUpdate2 = `#version 300 es
-
+        precision mediump float;
         in vec2 position;
 
         out vec2 uv;
@@ -173,6 +173,8 @@ function MetaballsFastProgram(){
 
         uniform sampler2D pos_old;
 
+        uniform vec2 res;
+
      
      
 
@@ -182,11 +184,12 @@ function MetaballsFastProgram(){
             vec4 p2 = texture(pos_old, uv); 
             float dx = (p.x - p2.x) ;
             float dy = (p.y - p2.y) ;
-
-            if(p.x + 2.0 * dx > 1.0 || p.x + 2.0 * dx< -1.0){
+            float radius = 0.03;
+            float aspect = res.x /res.y;
+            if(p.x + 2.0 * dx > 1.0 * aspect - radius || p.x + 2.0 * dx< -1.0 * aspect + radius){
                 p.x = p.x + 2.0 * dx;
             }
-            if(p.y + 2.0 *  dy > 1.0 || p.y + 2.0 * dy< -1.0){
+            if(p.y + 2.0 *  dy > 1.0 - radius || p.y + 2.0 * dy< -1.0 + radius){
                 p.y = p.y + 2.0 * dy;
             }
 
@@ -241,12 +244,13 @@ function MetaballsFastProgram(){
 
             vec4 p = texture(pos, position.xy/32.0);
 
-            p = p * 64.0;
+            p.x /= res.x/res.y;
+            p = p * 32.0;
             p = floor(p);
-            p /= 64.0;
+            p /= 32.0;
 
 
-           p.x /= res.x/res.y;
+           
 
            // float val = (id.x + 0.5) + id.y  * 32.0;
 
@@ -428,7 +432,7 @@ function MetaballsFastProgram(){
             gl.uniform1i(this.positionsUniform_current, 1);
 
 
-            gl.drawArrays(gl.POINTS, 0, 512);
+            gl.drawArrays(gl.POINTS, 0, 300);
           
             /*
             var pixels = new Float32Array(this.ballTexture.positionTexture.fb.width * this.ballTexture.positionTexture.fb.height * 4);
@@ -493,6 +497,8 @@ function MetaballsFastProgram(){
         gl.bindTexture(gl.TEXTURE_2D, this.ballTexture.textureOld.texture);
         gl.uniform1i(this.updateObject.positionOldUniform2 , 1);
 
+        gl.uniform2f(this.updateObject.positionResUniform2 , gl.canvas.width, gl.canvas.height);
+
         gl.bindVertexArray(this.vao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -555,6 +561,7 @@ function MetaballsFastProgram(){
         this.updateObject.program2 = createProgramFromSources(gl, this.vertexUpdate2, this.fragmentUpdate2);
         this.updateObject.positionUniform2 = gl.getUniformLocation(this.updateObject.program2, "pos");
         this.updateObject.positionOldUniform2 = gl.getUniformLocation(this.updateObject.program2, "pos_old");
+        this.updateObject.positionResUniform2 = gl.getUniformLocation(this.updateObject.program2, "res");
 
         this.vao = createVao(pao);
         this.positionVao = createPositionVao(pao_position, 32);
@@ -636,9 +643,11 @@ function MetaballsFastProgram(){
 
             //data.push(0.0);
             //data.push(0.0);
-             data.push((Math.random()- 0.5) * 2.0);
 
-            data.push((Math.random()- 0.5) * 2.0);
+            var aspect = gl.canvas.width / gl.canvas.height;
+            data.push((Math.random()- 0.5) * 1.9 * aspect);
+
+            data.push((Math.random()- 0.5) * 1.9);
             data.push(0.0);
             
 
@@ -667,7 +676,7 @@ function MetaballsFastProgram(){
         this.texture3 = createRenderTarget(this.width, this.height, data); 
         this.texture4 = createRenderTarget(this.width, this.height, data);        
 
-        var size = 64;
+        var size = 32;
         this.positionTexture = createRenderTarget(size, size, null);
         this.positionTexture2 = createRenderTarget(size, size, null);
         this.positionTexture3 = createRenderTarget(size, size, null);
