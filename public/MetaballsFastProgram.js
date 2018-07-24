@@ -1,3 +1,12 @@
+var GRID_SIZE = 64;
+var PARTICLE_SIZE =1.0 / GRID_SIZE ;
+
+var PARTICLE_SHOW = 1024;
+var PARTICLE_MAG = 32;
+
+var SPEED = 0.01;
+
+
 "use strict";
 function MetaballsFastProgram(){
     var gl;
@@ -12,9 +21,7 @@ function MetaballsFastProgram(){
         uniform vec2 res;
 
         void main() {
-            uv = 2.0 * (position - 0.5);
-            
-            uv.x *= res.x / res.y;
+            uv = 2.0 * (position - 0.5) * res / res.y;
 
             vuv = position;
 
@@ -26,7 +33,7 @@ function MetaballsFastProgram(){
 
     this.fragmentShaderSource = `#version 300 es
         precision highp float;
-        #define RADIUS 0.03
+        #define RADIUS PARTICLE_SIZE
 
         #define SIZE 4
 
@@ -46,10 +53,10 @@ function MetaballsFastProgram(){
             float s = float(SIZE);
             
 
-            for(float i = -3.0; i <= 3.0; i++){
-                for(float j = -3.0; j <= 3.0; j++){
-                    float i2 = vuv.x + (i +  0.5) /32.0;
-                    float j2 = vuv.y + (j + 0.5) /32.0;
+            for(float i = -2.0; i <= 2.0; i++){
+                for(float j = -2.0; j <= 2.0; j++){
+                    float i2 = vuv.x + (i +  0.5) /GRID_SIZE;
+                    float j2 = vuv.y + (j + 0.5) /GRID_SIZE;
                     vec4 id =  texture(positions, vec2(i2,j2));
                     if(!(i2 < 0.0 || i2 >1.0 || j2 < 0.0 || j2 > 1.0)){
                         id -= 1.0;
@@ -83,7 +90,7 @@ function MetaballsFastProgram(){
             }
             outColor = vec4(0.0, 0.0, 0.0, 1.0);
                 if(sum > 1.0){
-                    float v = smoothstep(1.0, 1.5, sum);
+                    float v = smoothstep(1.0, 1.2, sum);
                     outColor = vec4(v, 0.3 * v, 0.5 * v, 1.0);
                 
                 
@@ -245,9 +252,9 @@ function MetaballsFastProgram(){
             vec4 p = texture(pos, position.xy/32.0);
 
             p.x /= res.x/res.y;
-            p = p * 32.0;
-            p = floor(p);
-            p /= 32.0;
+            p = p * GRID_SIZE ;
+            p = floor(p) + 0.5;
+            p /= GRID_SIZE ;
 
 
            
@@ -344,15 +351,17 @@ function MetaballsFastProgram(){
     }
 
     this.draw = function(gl){
-        console.time();
-
 
         //gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
 
         this.update();
 
+       
+
         this.setPositions();
+
+        // return;
 
         
         gl.clearColor(0, 0, 0, 1.0);
@@ -379,7 +388,6 @@ function MetaballsFastProgram(){
         if(!this.display){
             this.showTexture(this.ballTexture.positionTexture.texture);
         }
-        console.timeEnd();
 
         
     }
@@ -432,7 +440,7 @@ function MetaballsFastProgram(){
             gl.uniform1i(this.positionsUniform_current, 1);
 
 
-            gl.drawArrays(gl.POINTS, 0, 300);
+            gl.drawArrays(gl.POINTS, 0, PARTICLE_SHOW);
           
             /*
             var pixels = new Float32Array(this.ballTexture.positionTexture.fb.width * this.ballTexture.positionTexture.fb.height * 4);
@@ -535,9 +543,13 @@ function MetaballsFastProgram(){
         this.ballTexture = new ballTexture(32);
 
         var gl = this.gl;
-        this.program =  createProgramFromSources(gl, this.vertexShaderSource, this.fragmentShaderSource);
-        this.showProgram =  createProgramFromSources(gl, this.vertexShowTexture, this.fragmentShowTexture);
-        this.positionProgram =  createProgramFromSources(gl, this.vertexPosition, this.fragmentPosition);
+        console.log("HERE")
+        this.program =  createProgramFromSources(gl, this.parse(this.vertexShaderSource), this.parse(this.fragmentShaderSource));
+        console.log("HERE")
+        this.showProgram =  createProgramFromSources(gl, this.parse(this.vertexShowTexture), this.parse(this.fragmentShowTexture));
+        console.log("HERE")
+        this.positionProgram =  createProgramFromSources(gl, this.parse(this.vertexPosition), this.parse(this.fragmentPosition));
+        console.log("HERE")
 
         var pao = gl.getAttribLocation(this.program, "position");
         var pao_position = gl.getAttribLocation(this.positionProgram, "position");
@@ -554,11 +566,11 @@ function MetaballsFastProgram(){
 
         this.updateObject = {};
 
-        this.updateObject.program = createProgramFromSources(gl, this.vertexUpdate, this.fragmentUpdate);
+        this.updateObject.program = createProgramFromSources(gl, this.parse(this.vertexUpdate), this.parse(this.fragmentUpdate));
         this.updateObject.positionUniform = gl.getUniformLocation(this.updateObject.program, "pos");
         this.updateObject.positionOldUniform = gl.getUniformLocation(this.updateObject.program, "pos_old");
 
-        this.updateObject.program2 = createProgramFromSources(gl, this.vertexUpdate2, this.fragmentUpdate2);
+        this.updateObject.program2 = createProgramFromSources(gl, this.parse(this.vertexUpdate2), this.parse(this.fragmentUpdate2));
         this.updateObject.positionUniform2 = gl.getUniformLocation(this.updateObject.program2, "pos");
         this.updateObject.positionOldUniform2 = gl.getUniformLocation(this.updateObject.program2, "pos_old");
         this.updateObject.positionResUniform2 = gl.getUniformLocation(this.updateObject.program2, "res");
@@ -660,8 +672,8 @@ function MetaballsFastProgram(){
         var data2 = [];
         for(var i = 0; i < this.width * this.height; i++){
             
-            data2.push(data[4 * i] + (Math.random()- 0.5) * 0.02);
-            data2.push(data[4 * i + 1] + (Math.random()- 0.5) * 0.02);
+            data2.push(data[4 * i] + (Math.random()- 0.5) * SPEED);
+            data2.push(data[4 * i + 1] + (Math.random()- 0.5) * SPEED);
             //data2.push(0.0);
             // data2.push(0.01);
               data2.push(0.0);
@@ -676,7 +688,7 @@ function MetaballsFastProgram(){
         this.texture3 = createRenderTarget(this.width, this.height, data); 
         this.texture4 = createRenderTarget(this.width, this.height, data);        
 
-        var size = 32;
+        var size = GRID_SIZE;
         this.positionTexture = createRenderTarget(size, size, null);
         this.positionTexture2 = createRenderTarget(size, size, null);
         this.positionTexture3 = createRenderTarget(size, size, null);
@@ -766,5 +778,7 @@ function MetaballsFastProgram(){
             this.display = !this.display;
         }
     }
-
+    this.parse = function(str){
+        return str.replace(/GRID_SIZE/g, GRID_SIZE + ".0").replace(/PARTICLE_SIZE/g, PARTICLE_SIZE).replace(/PARTICLE_MAG/g, PARTICLE_MAG)
+    }
 }
