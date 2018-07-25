@@ -1,7 +1,8 @@
-var GRID_SIZE = 64;
+var GRID_SIZE = 16;
+var GRID_SIZE2 = 1.0 / GRID_SIZE;
 var PARTICLE_SIZE =1.0 / GRID_SIZE ;
 
-var PARTICLE_SHOW = 1024;
+var PARTICLE_SHOW = 30;
 var PARTICLE_MAG = 32;
 
 var SPEED = 0.01;
@@ -52,33 +53,36 @@ function MetaballsFastProgram(){
             vec4 color;
             float s = float(SIZE);
             
+            float tmp = 1.0 / 32.0;
 
-            for(float i = -2.0; i <= 2.0; i++){
-                for(float j = -2.0; j <= 2.0; j++){
-                    float i2 = vuv.x + (i +  0.5) /GRID_SIZE;
-                    float j2 = vuv.y + (j + 0.5) /GRID_SIZE;
+            for(float i = -3.0; i <= 3.0; i++){
+                for(float j = -3.0; j <= 3.0; j++){
+                    float i2 = vuv.x + (i +  0.5) * GRID_NEG_SIZE;
+                    float j2 = vuv.y + (j + 0.5) * GRID_NEG_SIZE;
                     vec4 id =  texture(positions, vec2(i2,j2));
+
+
                     if(!(i2 < 0.0 || i2 >1.0 || j2 < 0.0 || j2 > 1.0)){
                         id -= 1.0;
 
-                        for(int i = 0; i < 4; i++){
-                            if(id[i] >= 0.0){
-                                vec2 v = vec2(0.0);
-                                bool test = true;
-                                
-                                    
-                                    v.y = floor(id[i] / 32.0) / 32.0;
-                                    v.x = mod(id[i], 32.0) / 32.0;
-                                
-                                    
+                        for(int x = 0; x < 4; x++){
+                            if(id[x] >= 0.0){
+                               
+                                vec2 v = vec2( mod(id[x], 32.0) * tmp, floor(id[x] * tmp) * tmp);
+                               
                                     vec4 ball = texture(balls,  v.xy);
 
 
-                                    float bottom = pow((uv.x - ball.x), 2.0) + pow((uv.y - ball.y), 2.0);
+
+                                    float bottom = (uv.x - ball.x) * (uv.x - ball.x) + (uv.y - ball.y) * (uv.y - ball.y);
                                 
-                                    sum +=  pow(RADIUS, 2.0)/bottom;
+                                    sum +=  (RADIUS * RADIUS)/bottom;
                                 
                             }
+                            else{
+                                x = 5;
+                            }
+
                                 
                         }
                            
@@ -251,10 +255,10 @@ function MetaballsFastProgram(){
 
             vec4 p = texture(pos, position.xy/32.0);
 
-            p.x /= res.x/res.y;
+            p.x *= res.y/res.x;
             p = p * GRID_SIZE ;
             p = floor(p) + 0.5;
-            p /= GRID_SIZE ;
+            p *= GRID_NEG_SIZE ;
 
 
            
@@ -268,7 +272,7 @@ function MetaballsFastProgram(){
             
 
 
-            pv = 0.5 + (p.xy ) / 2.0;
+            pv = 0.5 + (p.xy ) * 0.5;
 
             ///////
             /*
@@ -351,6 +355,8 @@ function MetaballsFastProgram(){
     }
 
     this.draw = function(gl){
+        console.time();
+
 
         //gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
 
@@ -358,12 +364,13 @@ function MetaballsFastProgram(){
         this.update();
 
        
-
+       
         this.setPositions();
+        
+        
 
         // return;
 
-        
         gl.clearColor(0, 0, 0, 1.0);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -389,6 +396,9 @@ function MetaballsFastProgram(){
             this.showTexture(this.ballTexture.positionTexture.texture);
         }
 
+        gl.finish();
+        console.timeEnd();
+
         
     }
    
@@ -401,17 +411,14 @@ function MetaballsFastProgram(){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.ballTexture.positionTexture2.fb);
-        gl.clearColor(0.0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.ballTexture.positionTexture3.fb);
-        gl.clearColor(0.0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+   
+        
 
          
        // gl.enable(gl.DEPTH_TEST);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.ballTexture.positionTexture2.fb);
+        gl.clearColor(0.0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.viewport(0, 0, this.ballTexture.positionTexture.fb.width, this.ballTexture.positionTexture.fb.height);
         gl.useProgram(this.positionProgram);
 
@@ -420,6 +427,12 @@ function MetaballsFastProgram(){
         gl.uniform2f(this.resUniform2, this.width, this.height); 
         gl.activeTexture(gl.TEXTURE0);
         gl.activeTexture(gl.TEXTURE1);
+
+              gl.bindTexture(gl.TEXTURE_2D, this.ballTexture.texture.texture);
+            gl.uniform1i(this.positionsUniform_pos, 0);
+
+            gl.bindTexture(gl.TEXTURE_2D, this.ballTexture.positionTexture.texture);
+            gl.uniform1i(this.positionsUniform_current, 1);
 
         for(var i = 0; i < 4; i++){
 
@@ -433,11 +446,7 @@ function MetaballsFastProgram(){
 
 
             
-            gl.bindTexture(gl.TEXTURE_2D, this.ballTexture.texture.texture);
-            gl.uniform1i(this.positionsUniform_pos, 0);
-
-            gl.bindTexture(gl.TEXTURE_2D, this.ballTexture.positionTexture.texture);
-            gl.uniform1i(this.positionsUniform_current, 1);
+      
 
 
             gl.drawArrays(gl.POINTS, 0, PARTICLE_SHOW);
@@ -779,6 +788,10 @@ function MetaballsFastProgram(){
         }
     }
     this.parse = function(str){
-        return str.replace(/GRID_SIZE/g, GRID_SIZE + ".0").replace(/PARTICLE_SIZE/g, PARTICLE_SIZE).replace(/PARTICLE_MAG/g, PARTICLE_MAG)
+        console.log(GRID_SIZE2);
+        str =  str.replace(/GRID_SIZE/g, GRID_SIZE + ".0").replace(/GRID_NEG_SIZE/g, GRID_SIZE2)
+                    .replace(/PARTICLE_SIZE/g, PARTICLE_SIZE).replace(/PARTICLE_MAG/g, PARTICLE_MAG);
+
+        return str;
     }
 }
