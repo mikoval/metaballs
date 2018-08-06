@@ -13,7 +13,7 @@ function MetaballsFastProgram(){
     var gl;
     this.gl;
     this.program;
-    this.vertexShaderSource = `#version 300 es
+    this.vertexMetaball = `#version 300 es
 
         in vec2 position;
 
@@ -32,7 +32,7 @@ function MetaballsFastProgram(){
         }
         `;
 
-    this.fragmentShaderSource = `#version 300 es
+    this.fragmentMetaball = `#version 300 es
         precision highp float;
         #define RADIUS PARTICLE_SIZE
 
@@ -552,13 +552,13 @@ function MetaballsFastProgram(){
         this.ballTexture = new ballTexture(32);
 
         var gl = this.gl;
-        console.log("HERE")
-        this.program =  createProgramFromSources(gl, this.parse(this.vertexShaderSource), this.parse(this.fragmentShaderSource));
-        console.log("HERE")
+
+        this.program =  createProgramFromSources(gl, this.parse(this.vertexMetaball), this.parse(this.fragmentMetaball));
+
         this.showProgram =  createProgramFromSources(gl, this.parse(this.vertexShowTexture), this.parse(this.fragmentShowTexture));
-        console.log("HERE")
+      
         this.positionProgram =  createProgramFromSources(gl, this.parse(this.vertexPosition), this.parse(this.fragmentPosition));
-        console.log("HERE")
+       
 
         var pao = gl.getAttribLocation(this.program, "position");
         var pao_position = gl.getAttribLocation(this.positionProgram, "position");
