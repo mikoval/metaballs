@@ -1,4 +1,4 @@
-var SIZE = 4;
+var SIZE = 20;
 function ParticleEngine(){
     this.gl;
     this.program;
@@ -70,7 +70,7 @@ function ParticleEngine(){
 
         }
         this.system.update();
-        
+
         var state = this.system.getState();
 
         if(false){

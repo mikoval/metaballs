@@ -121,8 +121,8 @@ function MetaballRenderer(){
 
     var showParticleProgram = function(gl, vertex, fragment, size){
     	this.program = createProgramFromSources(gl,
-            parse(vertex, 0.1, size),
-            parse(fragment, 0.1, size));
+            parse(vertex, 0.03, size),
+            parse(fragment, 0.03, size));
     	this.uniformPosition = gl.getAttribLocation(this.program, "position");
     	this.uniformImage = gl.getUniformLocation(this.program, "image");
         console.log(this.uniformPosition);
