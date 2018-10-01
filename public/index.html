@@ -1,38 +1,39 @@
 <canvas id="c"></canvas>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
-
-  <!-- The Close Button -->
-  <span class="close">&times;</span>
-
-  <!-- Modal Content (The Image) -->
-  <img class="modal-content" id="img01">
-
-  <!-- Modal Caption (Image Text) -->
-  <div id="caption"></div>
-</div>
-
-
-
-<!--
-for most samples webgl-utils only provides shader compiling/linking and
-canvas resizing because why clutter the examples with code that's the same in every sample.
-See http://webgl2fundamentals.org/webgl/lessons/webgl-boilerplate.html
-and http://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-for webgl-utils, m3, m4, and webgl-lessons-ui.
--->
+<div class = "menu"><p id="framerate">100</div>
 <script src="Util.js"></script>
-<script src="Renderer.js"></script>
 
-<script src="MetaballsBasicProgram.js"></script>
 
-<script src="MetaballsFastProgram.js"></script>
+<script src="ParticleEngine.js"></script>
 
-<script src="VerletProgram.js"></script>
+<script src="glWindow.js"></script>
+<script src="NoPhysicsSystem.js"></script>
+<script src="ParticleRenderer.js"></script>
+
+<script src="MetaballRenderer.js"></script>
+<script src="ImageRenderer.js"></script>
+
 <style>
+
+.menu{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+
+    background-color: gray;
+}
+#framerate{
+    padding: 10px;
+    width: 50px;
+    height: 20px;
+    color: black;
+    margin: auto;
+    text-align: center;
+}
+
 body {
   margin: 0px;
+  width: 
 }
 
 canvas {
@@ -124,11 +125,15 @@ canvas {
 </style>
 
 <script>
-	var r = new Renderer();
-	var program = new MetaballsFastProgram();
+    var renderer = new MetaballRenderer();
+    var system = new NoPhysicsSystem();
+	var program = new ParticleEngine();
 
-	r.init();
+    program.setSystem(system);
+    program.setRenderer(renderer);
 
-	r.setProgram(program);
+	program.init();
+    program.execute();
+
 
 </script>
