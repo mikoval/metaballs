@@ -77,7 +77,9 @@ function ParticleEngine(){
         if(false){
             this.imageRenderer.draw(state);
         } else {
-            this.renderer.draw(state);
+                        this.renderer.draw(state);
+            var state = this.renderer.getBucket();
+            this.imageRenderer.draw(state);
         }
         
     }
