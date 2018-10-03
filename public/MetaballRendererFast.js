@@ -27,10 +27,14 @@ function MetaballRendererFast(){
 
             float r = SIZE * SIZE / 2.0;
 
+            float bx = floor(uv.x * gSize)/gSize + 1.0/(gSize*2.0);
+            float by = floor(uv.y * gSize)/gSize + 1.0/(gSize*2.0);
+
+            vec2 bucketPos = vec2(bx, by);
 
             for(float i =-1.0; i < 2.0; i++){
             	for(float j = -1.0; j < 2.0; j++){
-            		vec2 uv2 = uv + vec2 (i, j)/ gSize;
+            		vec2 uv2 = bucketPos + vec2 (i, j)/ gSize;
 	            	vec4 point = texture(bucket, uv2) - 1.0;
             		for(int k = 0; k < 4; k++){
             			float p = point[k];
@@ -89,7 +93,15 @@ function MetaballRendererFast(){
 
             pos.x *= aspect;
 
+            float gSize = DIMENSION * 2.0;
+
+            float bx = floor(pos.x * gSize)/gSize + 1.0/(gSize*2.0);
+            float by = floor(pos.y * gSize)/gSize + 1.0/(gSize*2.0);
+
+            pos = vec2(bx, by);
             pv = (pos + 1.0)/2.0;
+
+
             gl_Position = vec4(pos, 0, 1);
         }
         `;
