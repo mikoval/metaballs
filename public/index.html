@@ -11,6 +11,7 @@
 <script src="ParticleRenderer.js"></script>
 
 <script src="MetaballRenderer.js"></script>
+<script src="MetaballRendererFast.js"></script>
 <script src="ImageRenderer.js"></script>
 
 <style>
@@ -125,7 +126,7 @@ canvas {
 </style>
 
 <script>
-    var renderer = new MetaballRenderer();
+    var renderer = new MetaballRendererFast();
     var system = new NoPhysicsSystem();
 	var program = new ParticleEngine();
 

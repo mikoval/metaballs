@@ -57,9 +57,9 @@ function NoPhysicsSystem(){
             vec4 p2 = texture(pos_old, uv); 
             float dx = (p.x - p2.x) ;
             float dy = (p.y - p2.y) ;
-            float radius = 0.03;
-
-            if(p.x + 2.0 * dx > 1.0  - radius || p.x + 2.0 * dx< -1.0  + radius){
+            float radius = 0.0;//0.03;
+            float aspect = res.x / res.y;
+            if(p.x + 2.0 * dx > 1.0 * aspect  - radius || p.x + 2.0 * dx< -1.0 *aspect + radius){
                 p.x = p.x + 2.0 * dx;
             }
             if(p.y + 2.0 *  dy > 1.0 - radius || p.y + 2.0 * dy< -1.0 + radius){
@@ -70,8 +70,9 @@ function NoPhysicsSystem(){
         `;
 
 
-	this.init = function(gl, size){
+	this.init = function(gl, size, particleSize){
 		this.size = size;
+        this.particleSize = particleSize;
 		console.log(gl);
 		this.gl = gl;
 
@@ -196,8 +197,8 @@ function NoPhysicsSystem(){
             //data.push(0.0);
 
          
-            data.push((Math.random()- 0.5) * 2.0);
-            data.push((Math.random()- 0.5) * 2.0);
+            data.push((Math.random()- 0.5) * 1.9);
+            data.push((Math.random()- 0.5) * 1.9);
             data.push(0.0);
             
 
@@ -221,8 +222,8 @@ function NoPhysicsSystem(){
 
         this.texture1 = createRenderTarget(gl, this.width, this.height, data);
         this.texture2 = createRenderTarget(gl, this.width, this.height, data2);
-        this.texture3 = createRenderTarget(gl, this.width, this.height, data);
-        this.texture4 = createRenderTarget(gl, this.width, this.height, data); 
+        this.texture3 = createRenderTarget(gl, this.width, this.height, null);
+        this.texture4 = createRenderTarget(gl, this.width, this.height, null); 
  
 
 
@@ -330,7 +331,6 @@ function NoPhysicsSystem(){
         var stride = 0;
         var offset = 0;
         gl.vertexAttribPointer( location, size, type, normalize, stride, offset);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 
         return vao;

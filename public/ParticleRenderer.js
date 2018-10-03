@@ -3,9 +3,13 @@ function ParticleRenderer(){
         in vec2 position;
         out vec2 uv;
         uniform sampler2D image;
+        uniform vec2 res;
+        uniform float size;
         void main() {
-        	 gl_PointSize = 30.0;
+            float aspect = res.x/res.y;
+        	 gl_PointSize = res.y * size;
             vec2 pos = texture(image, position).xy;
+            pos.x /= aspect;
             gl_Position = vec4(pos, 0, 1);
         }
         `;
@@ -22,34 +26,40 @@ function ParticleRenderer(){
 
       
 		   
-		    float val = smoothstep(1.0, 0.5, r);
+		    float val = smoothstep(1.0, 0.95, r);
             outColor = vec4(val) ;
         }
         `;
 
-	this.init = function(gl, size) {
+	this.init = function(gl, gridSize, particleSize) {
 
 		this.gl = gl;
-		this.size = size;
+		this.size = gridSize;
+        this.particleSize = particleSize;
 
 		this.gl.clearColor(0, 0, 0, 1.0);
 
 
 		this.showParticleObj = new showParticleProgram(gl, this.vertex, this.fragment);
-		this.vao = createVao(gl, this.showParticleObj.uniformPosition, size);
+		this.vao = createVao(gl, this.showParticleObj.uniformPosition, this.size);
 
 	}
 
 	this.draw = function(state){
 
 		var gl = this.gl;
+
         gl.enable(gl.BLEND);
+
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+
 
         this.showTexture(state);
 	}
@@ -63,7 +73,12 @@ function ParticleRenderer(){
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-        gl.uniform1i(this.showParticleObj.imageUniform, 0);
+        gl.uniform1i(this.showParticleObj.uniformImage, 0);
+
+
+        gl.uniform2f(this.showParticleObj.uniformRes, gl.canvas.width, gl.canvas.height);
+
+        gl.uniform1f(this.showParticleObj.uniformSize, this.particleSize);
 
         gl.bindVertexArray(this.vao);
         gl.drawArrays(gl.POINTS, 0, this.size * this.size);
@@ -103,7 +118,11 @@ function ParticleRenderer(){
     var showParticleProgram = function(gl, vertex, fragment){
     	this.program = createProgramFromSources(gl, vertex, fragment);
     	this.uniformPosition = gl.getAttribLocation(this.program, "position");
-    	this.uniformImage = gl.getAttribLocation(this.program, "image");
+    	this.uniformImage = gl.getUniformLocation(this.program, "image");
+        this.uniformRes = gl.getUniformLocation(this.program, "res");
+        this.uniformSize = gl.getUniformLocation(this.program, "size");
+
+
 
 
     }

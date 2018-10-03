@@ -55,7 +55,6 @@ function ImageRenderer(){
         gl.useProgram(this.showTextureObj.program);
 
         gl.activeTexture(gl.TEXTURE0);
-        console.log(texture.texture);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         gl.uniform1i(this.showTextureObj.imageUniform, 0);
 

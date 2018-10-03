@@ -1,4 +1,5 @@
-var SIZE = 20;
+var GRID_SIZE = 2;
+var PARTICLE_SIZE = .1;
 function ParticleEngine(){
     this.gl;
     this.program;
@@ -30,8 +31,8 @@ function ParticleEngine(){
             return false;
         }
 
-        renderer.init(this.ctx, SIZE);
-        system.init(this.ctx, SIZE);
+        renderer.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
+        system.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
 
         /* for debug */
         this.imageRenderer = new ImageRenderer();
@@ -102,6 +103,21 @@ function ParticleEngine(){
             
         };
         window.onkeypress = function(event) {
+            if(event.key == "1"){
+                ctx.renderer = new MetaballRenderer();
+                console.log(ctx.ctx);
+                ctx.renderer.init(ctx.ctx, GRID_SIZE, PARTICLE_SIZE);
+            }
+            if(event.key == "2"){
+                ctx.renderer = new ParticleRenderer();
+                console.log(ctx.ctx);
+                ctx.renderer.init(ctx.ctx, GRID_SIZE, PARTICLE_SIZE);
+            }
+            if(event.key == "3"){
+                ctx.renderer = new MetaballRendererFast();
+                console.log(ctx.ctx);
+                ctx.renderer.init(ctx.ctx, GRID_SIZE, PARTICLE_SIZE);
+            }
         };
     }
 }

@@ -3,8 +3,13 @@ function MetaballRenderer(){
         in vec2 position;
         out vec2 uv;
         uniform vec2 res;
+
         void main() {
+            float aspect = res.x / res.y;
             uv = position * 2.0 - 1.0;
+
+            uv.x *= aspect;
+
             
             vec2 position0 = position * 2.0 - 1.0;
             gl_Position = vec4(position0, 0, 1);
@@ -16,18 +21,20 @@ function MetaballRenderer(){
         in vec2 uv;
         out vec4 outColor;
         uniform sampler2D image;
+
+        uniform float size;
         
         void main() {
             float sum = 0.0;
             float show = 0.0;
+            
 
-            float r =  SIZE * SIZE;
+            float r =  size * size / 2.0;
 
             for(float i = 0.5; i < DIMENSION; i++){
                 for(float j = 0.5; j < DIMENSION; j++){
                     vec2 coord = vec2(i / DIMENSION, j / DIMENSION);
                     vec2 p = texture(image, coord).xy;
-
                     vec2 d = uv - p;
                     sum += (r) / (d.x * d.x + d.y * d.y);
                     
@@ -44,10 +51,11 @@ function MetaballRenderer(){
         }
         `;
 
-	this.init = function(gl, size) {
+	this.init = function(gl, size, particleSize) {
 
 		this.gl = gl;
 		this.size = size;
+        this.particleSize = particleSize;
 
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -71,16 +79,16 @@ function MetaballRenderer(){
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
         gl.useProgram(this.showParticleObj.program);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, state.texture);
 
         gl.uniform1i(this.showParticleObj.uniformImage, 0);
+
+        gl.uniform2f(this.showParticleObj.uniformRes, gl.canvas.width, gl.canvas.height);
+
+        gl.uniform1f(this.showParticleObj.uniformSize, this.particleSize);
 
         gl.bindVertexArray(this.vao);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -125,6 +133,8 @@ function MetaballRenderer(){
             parse(fragment, 0.03, size));
     	this.uniformPosition = gl.getAttribLocation(this.program, "position");
     	this.uniformImage = gl.getUniformLocation(this.program, "image");
+        this.uniformRes = gl.getUniformLocation(this.program, "res");
+        this.uniformSize = gl.getUniformLocation(this.program, "size");
         console.log(this.uniformPosition);
 
 
