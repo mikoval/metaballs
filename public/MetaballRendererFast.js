@@ -11,7 +11,7 @@ function MetaballRendererFast(){
         `;
 
     this.metaballFragment = `#version 300 es
-        precision mediump float;
+        precision highp float;
         in vec2 uv;
         out vec4 outColor;
         uniform sampler2D bucket;
@@ -23,36 +23,52 @@ function MetaballRendererFast(){
             float show = 0.0;
             float aspect = res.x / res.y;
 
-            
+            float gSize = DIMENSION * 2.0;
+
+            float r = SIZE * SIZE / 2.0;
 
 
-            float p = texture(bucket, uv).x - 1.0;
+            for(float i =-1.0; i < 2.0; i++){
+            	for(float j = -1.0; j < 2.0; j++){
+            		vec2 uv2 = uv + vec2 (i, j)/ gSize;
+	            	vec4 point = texture(bucket, uv2) - 1.0;
+            		for(int k = 0; k < 4; k++){
+            			float p = point[k];
+	            		if(p < 0.0 || uv2.x < 0.0 || uv2.y < 0.0 || uv2.x > 1.0 || uv2.y > 1.0){
+	            			continue;
+	            		}
 
-            vec2 uv2 = uv * 2.0 - 1.0;
+	            		
 
-            uv2.x *= aspect;
+	            		vec2 uv3 = uv * 2.0 - 1.0;
 
-            float y = floor(p/DIMENSION);
+			            uv3.x *= aspect;
+			            float y = floor(p/DIMENSION);
 
-            float x = p - y * DIMENSION;
+			            float x = p - y * DIMENSION;
 
-            y /= DIMENSION;
-            x /= DIMENSION;
-
-
-            vec4 val = texture(image, vec2(x, y));
-
-            float dist = length(val.xy - uv2);
+			            y /= DIMENSION;
+			            x /= DIMENSION;
 
 
+			            vec4 val = texture(image, vec2(x, y));
 
-            if(dist < SIZE){
-				outColor = vec4(1.0, 0.0, 0.0, 1.0);
+			            vec2 d = val.xy - uv3;
+
+			            sum += (r) / (d.x * d.x + d.y * d.y);
+            		}
+            		
+            	}
             }
-            else {
-            	outColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+
+
+            if(sum > 1.0){
+                show = 1.0;
             }
-            
+
+
+				outColor = vec4(vec3(show), 1.0);            
         }
         `;
 
@@ -230,13 +246,10 @@ function MetaballRendererFast(){
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.bucketTarget.fb);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-
         var fb = this.bucketTarget.fb;
         var pixels = new Float32Array(fb.width * fb.height * 4);
         gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
         console.log(pixels);
-
-
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
