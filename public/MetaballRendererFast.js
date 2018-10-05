@@ -130,11 +130,7 @@ function MetaballRendererFast(){
             vec2 p = pv;
             vec4 c = texture(current, p.xy);
             float val = id.x + id.y * DIMENSION + 1.0;
-           
-            
-            
-            
-            
+
             for(int i = 0; i < 4; i++){
                 if(c[i] < 1.0){
                     c[i] = val;
@@ -220,8 +216,16 @@ function MetaballRendererFast(){
 
         for(var i = 0; i < 4; i++){
             gl.drawArrays(gl.POINTS, 0, this.size * this.size);
+
+            gl.activeTexture(gl.TEXTURE0);
+        	gl.bindTexture(gl.TEXTURE_2D, state.texture);
+        	gl.uniform1i(this.bucketObj.uniformImage, 0);
+
+
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget2.texture);
+            gl.uniform1i(this.bucketObj.uniformImage2, 1);
+
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.bucketTarget2.fb.width, this.bucketTarget2.fb.height, 0);
         }
         /*
