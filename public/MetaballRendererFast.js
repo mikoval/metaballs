@@ -83,6 +83,7 @@ function MetaballRendererFast(){
         out vec2 pv;
         uniform vec2 res;
         uniform sampler2D image;
+        uniform sampler2D current;
         void main() {
             gl_PointSize = 1.0;
             id = position * DIMENSION;
@@ -100,6 +101,18 @@ function MetaballRendererFast(){
 
             pos = vec2(bx, by);
             pv = (pos + 1.0)/2.0;
+
+            float val = id.x + id.y * DIMENSION + 1.0;
+            vec4 c = texture(current, pv.xy);
+            
+            for(int i = 0; i < 4; i++){
+                if(abs(c[i] - val) < 0.1) {
+                    pos = vec2(1000.0, 1000.0);
+                }
+            }
+            
+            
+
 
 
             gl_Position = vec4(pos, 0, 1);
@@ -123,9 +136,6 @@ function MetaballRendererFast(){
             
             
             for(int i = 0; i < 4; i++){
-                if(abs(c[i] - val) < 0.1) {
-                    discard;
-                }
                 if(c[i] < 1.0){
                     c[i] = val;
                     break;
