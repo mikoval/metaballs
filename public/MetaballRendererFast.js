@@ -86,11 +86,11 @@ function MetaballRendererFast(){
         uniform sampler2D current;
         void main() {
             gl_PointSize = 1.0;
-            id = position * DIMENSION;
+            id = position;
 
             float aspect = res.y / res.x;
-
-            vec2 pos = texture(image, position).xy;
+            ivec2 ipos = ivec2(position.x, position.y);
+            vec2 pos = texelFetch(image, ipos, 0).xy;
 
             pos.x *= aspect;
 
@@ -424,8 +424,8 @@ function MetaballRendererFast(){
         var positions = [];
         for(var i = 0; i < size; i++){
             for( var j = 0; j < size; j++){
-                positions.push(j/size);
-                positions.push(i/size);
+                positions.push(j);
+                positions.push(i);
             }
         }
 
