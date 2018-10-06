@@ -95,13 +95,14 @@ function MetaballRendererFast(){
             pos.x *= aspect;
 
 
-            float gSize = float(textureSize(current, 0));
+            float gSize = float(textureSize(image, 0).x);
+            float val = float(int(id.x) + int(id.y) * int(gSize) + 1);
 
             vec2 b = floor(pos * gSize)/gSize + 0.5/gSize;
 
             pv = (b + 1.0)/2.0;
 
-            float val = id.x + id.y * DIMENSION + 1.0;
+            
             vec4 c = texture(current, pv.xy);
             
             for(int i = 0; i < 4; i++){
@@ -124,15 +125,18 @@ function MetaballRendererFast(){
         in vec2 pv;
         out vec4 outColor;
         uniform sampler2D current;
+        uniform sampler2D image;
         
         void main() {
             vec2 p = pv;
             vec4 c = texture(current, p.xy);
-            float val = id.x + id.y * DIMENSION + 1.0;
+
+            int size = textureSize(image, 0).x;
+            int val = int(id.x) + int(id.y) * size + 1;
 
             for(int i = 0; i < 4; i++){
-                if(c[i] < 1.0){
-                    c[i] = val;
+                if(c[i] == 0.0){
+                    c[i] = float(val);
                     break;
                 }
             }
@@ -227,12 +231,12 @@ function MetaballRendererFast(){
 
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.bucketTarget2.fb.width, this.bucketTarget2.fb.height, 0);
         }
-        /*
+        
         var fb = this.bucketTarget.fb;
         var pixels = new Float32Array(fb.width * fb.height * 4);
         gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
         console.log(pixels);
-		*.
+		
 
         /* clear previous run */
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.bucketTarget2.fb);
