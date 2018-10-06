@@ -23,22 +23,24 @@ function MetaballRendererFast(){
             float show = 0.0;
             float aspect = res.x / res.y;
 
-            float gSize = DIMENSION * 2.0;
+
+
+            float bSize = float(textureSize(bucket, 0).x);;
+            float iSize = float(textureSize(image, 0).x);;
 
             float r = SIZE * SIZE / 2.0;
 
-            float bx = floor(uv.x * gSize)/gSize + 1.0/(gSize*2.0);
-            float by = floor(uv.y * gSize)/gSize + 1.0/(gSize*2.0);
+            vec2 bucketPos = (floor(uv * bSize) +  0.5) / bSize;
+           
 
-            vec2 bucketPos = vec2(bx, by);
 
             for(float i =-1.0; i < 2.0; i++){
             	for(float j = -1.0; j < 2.0; j++){
-            		vec2 uv2 = bucketPos + vec2 (i, j)/ gSize;
+            		vec2 uv2 = bucketPos + vec2 (i, j)/ bSize;
 	            	vec4 point = texture(bucket, uv2) - 1.0;
             		for(int k = 0; k < 4; k++){
             			float p = point[k];
-	            		if(p < 0.0 || uv2.x < 0.0 || uv2.y < 0.0 || uv2.x > 1.0 || uv2.y > 1.0){
+	            		if(p < 0.0 || uv2.x <= 0.0 || uv2.y <= 0.0 || uv2.x > 1.0 || uv2.y > 1.0){
 	            			continue;
 	            		}
 
@@ -47,12 +49,12 @@ function MetaballRendererFast(){
 	            		vec2 uv3 = uv * 2.0 - 1.0;
 
 			            uv3.x *= aspect;
-			            float y = floor(p/DIMENSION);
+			            float y = floor(p/iSize);
 
-			            float x = p - y * DIMENSION;
+			            float x = p - y * iSize;
 
-			            y /= DIMENSION;
-			            x /= DIMENSION;
+			            y /= iSize;
+			            x /= iSize;
 
 
 			            vec4 val = texture(image, vec2(x, y));
@@ -105,7 +107,7 @@ function MetaballRendererFast(){
             vec4 c = texture(current, pv.xy);
             
             for(int i = 0; i < 4; i++){
-                if(c[i] - val  == 0.0) {
+                if(c[i] == val) {
                     b = vec2(1000.0, 1000.0);
                 }
             }
