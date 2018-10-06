@@ -78,8 +78,8 @@ function MetaballRendererFast(){
 
     this.bucketVertex = `#version 300 es
         precision highp float;
-        in vec2 position;
-        out vec2 id;
+        in ivec2 position;
+        flat out ivec2 id;
         out vec2 pv;
         uniform vec2 res;
         uniform sampler2D image;
@@ -89,14 +89,13 @@ function MetaballRendererFast(){
             id = position;
 
             float aspect = res.y / res.x;
-            ivec2 ipos = ivec2(position.x, position.y);
-            vec2 pos = texelFetch(image, ipos, 0).xy;
+            vec2 pos = texelFetch(image, position, 0).xy;
 
             pos.x *= aspect;
 
 
             float gSize = float(textureSize(image, 0).x);
-            float val = float(int(id.x) + int(id.y) * int(gSize) + 1);
+            float val = float(id.x + id.y * int(gSize) + 1);
 
             vec2 b = floor(pos * gSize)/gSize + 0.5/gSize;
 
@@ -121,7 +120,7 @@ function MetaballRendererFast(){
 
     this.bucketFragment = `#version 300 es
         precision highp float;
-        in vec2 id;
+        flat in ivec2 id;
         in vec2 pv;
         out vec4 outColor;
         uniform sampler2D current;
@@ -132,7 +131,7 @@ function MetaballRendererFast(){
             vec4 c = texture(current, p.xy);
 
             int size = textureSize(image, 0).x;
-            int val = int(id.x) + int(id.y) * size + 1;
+            int val = id.x + id.y * size + 1;
 
             for(int i = 0; i < 4; i++){
                 if(c[i] == 0.0){
@@ -272,13 +271,6 @@ function MetaballRendererFast(){
         gl.uniform2f(this.showParticleObj.uniformRes, gl.canvas.width, gl.canvas.height);
 
         gl.bindVertexArray(this.vao);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.bucketTarget.fb);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-        var fb = this.bucketTarget.fb;
-        var pixels = new Float32Array(fb.width * fb.height * 4);
-        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
-        console.log(pixels);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -432,16 +424,16 @@ function MetaballRendererFast(){
             }
         }
 
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Int32Array(positions), gl.STATIC_DRAW);
 
         gl.enableVertexAttribArray(location);
 
         var size = 2;
-        var type = gl.FLOAT;
+        var type = gl.INT;
         var normalize = false;
         var stride = 0;
         var offset = 0;
-        gl.vertexAttribPointer( location, size, type, normalize, stride, offset);
+        gl.vertexAttribIPointer ( location, size, type, normalize, stride, offset);
 
         return vao;
     }
