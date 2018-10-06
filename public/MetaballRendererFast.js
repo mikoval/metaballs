@@ -94,20 +94,19 @@ function MetaballRendererFast(){
 
             pos.x *= aspect;
 
-            float gSize = DIMENSION * 2.0;
 
-            float bx = floor(pos.x * gSize)/gSize + 1.0/(gSize*2.0);
-            float by = floor(pos.y * gSize)/gSize + 1.0/(gSize*2.0);
+            float gSize = float(textureSize(current, 0));
 
-            pos = vec2(bx, by);
-            pv = (pos + 1.0)/2.0;
+            vec2 b = floor(pos * gSize)/gSize + 0.5/gSize;
+
+            pv = (b + 1.0)/2.0;
 
             float val = id.x + id.y * DIMENSION + 1.0;
             vec4 c = texture(current, pv.xy);
             
             for(int i = 0; i < 4; i++){
-                if(abs(c[i] - val) < 0.1) {
-                    pos = vec2(1000.0, 1000.0);
+                if(c[i] - val  == 0.0) {
+                    b = vec2(1000.0, 1000.0);
                 }
             }
             
@@ -115,7 +114,7 @@ function MetaballRendererFast(){
 
 
 
-            gl_Position = vec4(pos, 0, 1);
+            gl_Position = vec4(b, 0, 1);
         }
         `;
 
