@@ -99,7 +99,7 @@ function MetaballRendererFast(){
             float gSize = float(textureSize(image, 0).x);
             float val = float(id.x + id.y * int(gSize) + 1);
 
-            vec2 b = floor(pos * gSize)/gSize + 0.5/gSize;
+            vec2 b = (floor(pos * gSize) +  0.5)/gSize;
 
             pv = (b + 1.0)/2.0;
 
@@ -136,6 +136,9 @@ function MetaballRendererFast(){
             int val = id.x + id.y * size + 1;
 
             for(int i = 0; i < 4; i++){
+            	if(c[i] != 0.0){
+            		discard;
+            	}
                 if(c[i] == 0.0){
                     c[i] = float(val);
                     break;
