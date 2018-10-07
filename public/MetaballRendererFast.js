@@ -1,4 +1,25 @@
 function MetaballRendererFast(){
+    this.copyVertex = `#version 300 es
+        in vec2 position;
+        out vec2 uv;
+        
+        void main() {
+            uv = position;
+            vec2 position0 = position * 2.0 - 1.0;
+            gl_Position = vec4(position0, 0, 1);
+        }
+        `;
+
+    this.copyFragment = `#version 300 es
+        precision highp float;
+        in vec2 uv;
+        out vec4 outColor;
+        uniform sampler2D image;
+        
+        void main() {
+			outColor = texture(image , uv);         
+        }
+        `;
     this.metaballVertex = `#version 300 es
         in vec2 position;
         out vec2 uv;
@@ -127,7 +148,6 @@ function MetaballRendererFast(){
         out vec4 outColor;
         uniform sampler2D current;
         uniform sampler2D image;
-        uniform int render;
         
         void main() {
             vec2 p = pv;
@@ -136,15 +156,12 @@ function MetaballRendererFast(){
             int size = textureSize(image, 0).x;
             int val = id.x + id.y * size + 1;
 
-            if(render == 0){
-            	for(int i = 0; i < 4; i++){
-	                if(c[i] == 0.0){
-	                    c[i] = float(val);
-	                    break;
-	                }
-	            }
+            for(int i = 0; i < 4; i++){
+                if(c[i] == 0.0){
+                    c[i] = float(val);
+                    break;
+                }
             }
-            
             
             
             
@@ -171,7 +188,14 @@ function MetaballRendererFast(){
 
         this.showParticleObj = new showParticleProgram(gl, this.metaballVertex, this.metaballFragment, particleSize, size);
 
+
+        this.copyObject = new copyProgram(gl, this.copyVertex, this.copyFragment);
+
+
+
         this.vao = createVao(gl, this.showParticleObj.uniformPosition, size);
+
+        this.copyVao = createVao(gl, this.copyObject.uniformPosition, size);
 	}
 
 	this.draw = function(state){
@@ -220,44 +244,38 @@ function MetaballRendererFast(){
         gl.bindVertexArray(this.bucketVao);
 
         gl.uniform2f(this.bucketObj.uniformRes, gl.canvas.width, gl.canvas.height);
-
+        var w = this.bucketTarget.fb.width;
+        var h = this.bucketTarget.fb.width
 
         for(var i = 0; i < 4; i++){
-
-            gl.activeTexture(gl.TEXTURE0);
-        	gl.bindTexture(gl.TEXTURE_2D, state.texture);
-        	gl.uniform1i(this.bucketObj.uniformImage, 0);
-
-
-            gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget2.texture);
-            gl.uniform1i(this.bucketObj.uniformImage2, 1);
-
-            if(i == 3){
-            	gl.uniform1i(this.bucketObj.uniformRender, 1);
-            	 
-            }
-            else {
-            	gl.uniform1i(this.bucketObj.uniformRender, 0);
-            }
+        	       
 
 
             gl.drawArrays(gl.POINTS, 0, this.size * this.size);
+    
+				this.copyTexture(this.bucketTarget, this.bucketTarget2);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.bucketTarget.fb);
+
+				gl.useProgram(this.bucketObj.program);
+				gl.bindVertexArray(this.bucketVao);
+
+	            gl.activeTexture(gl.TEXTURE0);
+	        	gl.bindTexture(gl.TEXTURE_2D, state.texture);
+	        	gl.uniform1i(this.bucketObj.uniformImage, 0);
 
 
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.bucketTarget2.fb.width, this.bucketTarget2.fb.height, 0);
-        }
+	            gl.activeTexture(gl.TEXTURE1);
+	            gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget2.texture);
+	            gl.uniform1i(this.bucketObj.uniformImage2, 1);
+            }
+            
+
+            
+   
         
-        var fb = this.bucketTarget.fb;
-        var pixels = new Float32Array(fb.width * fb.height * 4);
-        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
-        console.log(pixels);
-		
 
-        /* clear previous run */
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.bucketTarget2.fb);
-        gl.clearColor(0.0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
 
 
     }
@@ -338,7 +356,6 @@ function MetaballRendererFast(){
     	this.attrPosition = gl.getAttribLocation(this.program, "position");
     	this.uniformImage = gl.getUniformLocation(this.program, "image");
         this.uniformImage2 = gl.getUniformLocation(this.program, "current");
-        this.uniformRender = gl.getUniformLocation(this.program, "render");
 
         this.uniformRes = gl.getUniformLocation(this.program, "res");
 
@@ -468,8 +485,14 @@ function MetaballRendererFast(){
 
         this.uniformRes = gl.getUniformLocation(this.program, "res");
 
+    }
 
+    var copyProgram = function(gl, vertex, fragment){
+        this.program = createProgramFromSources(gl, vertex, fragment);
 
+        this.uniformPosition = gl.getAttribLocation(this.program, "position");
+
+        this.uniformImage = gl.getUniformLocation(this.program, "image");
     }
 
     var createVao = function(gl, location){
@@ -501,5 +524,25 @@ function MetaballRendererFast(){
 
 
         return vao;
+    }
+
+    this.copyTexture = function(source, target){
+    	var gl = this.gl;
+    	gl.bindFramebuffer(gl.FRAMEBUFFER, target.fb);
+    	gl.useProgram(this.copyObject.program);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, source.texture);
+
+        gl.uniform1i(this.bucketObj.uniformImage, 0);
+
+        gl.viewport(0, 0, target.fb.width, target.fb.height);
+
+        gl.bindVertexArray(this.copyVao);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+
     }
 }
