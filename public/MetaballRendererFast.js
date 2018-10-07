@@ -55,8 +55,8 @@ function MetaballRendererFast(){
            
 
 
-            for(float i =-1.0; i < 2.0; i++){
-            	for(float j = -1.0; j < 2.0; j++){
+            for(float i =-2.0; i < 3.0; i++){
+            	for(float j = -2.0; j < 3.0; j++){
             		vec2 uv2 = bucketPos + vec2 (i, j)/ bSize;
 	            	vec4 point = texture(bucket, uv2) - 1.0;
             		for(int k = 0; k < 4; k++){
@@ -95,7 +95,7 @@ function MetaballRendererFast(){
             }
 
 
-				outColor = vec4(vec3(show), 1.0);            
+				outColor = vec4(vec3(show), 1.0 - show);            
         }
         `;
 
@@ -284,7 +284,7 @@ function MetaballRendererFast(){
 
         var gl = this.gl;
 
-
+        gl.enable(gl.BLEND);
         
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -534,7 +534,7 @@ function MetaballRendererFast(){
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, source.texture);
 
-        gl.uniform1i(this.bucketObj.uniformImage, 0);
+        gl.uniform1i(this.copyObject.uniformImage, 0);
 
         gl.viewport(0, 0, target.fb.width, target.fb.height);
 
