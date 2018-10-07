@@ -127,6 +127,7 @@ function MetaballRendererFast(){
         out vec4 outColor;
         uniform sampler2D current;
         uniform sampler2D image;
+        uniform int render;
         
         void main() {
             vec2 p = pv;
@@ -135,12 +136,15 @@ function MetaballRendererFast(){
             int size = textureSize(image, 0).x;
             int val = id.x + id.y * size + 1;
 
-            for(int i = 0; i < 4; i++){
-                if(c[i] == 0.0){
-                    c[i] = float(val);
-                    break;
-                }
+            if(render == 0){
+            	for(int i = 0; i < 4; i++){
+	                if(c[i] == 0.0){
+	                    c[i] = float(val);
+	                    break;
+	                }
+	            }
             }
+            
             
             
             
@@ -228,6 +232,15 @@ function MetaballRendererFast(){
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget2.texture);
             gl.uniform1i(this.bucketObj.uniformImage2, 1);
+
+            if(i == 3){
+            	gl.uniform1i(this.bucketObj.uniformRender, 1);
+            	 
+            }
+            else {
+            	gl.uniform1i(this.bucketObj.uniformRender, 0);
+            }
+
 
             gl.drawArrays(gl.POINTS, 0, this.size * this.size);
 
@@ -325,6 +338,7 @@ function MetaballRendererFast(){
     	this.attrPosition = gl.getAttribLocation(this.program, "position");
     	this.uniformImage = gl.getUniformLocation(this.program, "image");
         this.uniformImage2 = gl.getUniformLocation(this.program, "current");
+        this.uniformRender = gl.getUniformLocation(this.program, "render");
 
         this.uniformRes = gl.getUniformLocation(this.program, "res");
 
