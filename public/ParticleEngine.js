@@ -1,5 +1,5 @@
-var GRID_SIZE = 4;
-var PARTICLE_SIZE = .1;
+var GRID_SIZE = 32;
+var PARTICLE_SIZE = .04;
 function ParticleEngine(){
     this.gl;
     this.program;
