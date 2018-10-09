@@ -49,7 +49,7 @@ function MetaballRendererFast(){
             float bSize = float(textureSize(bucket, 0).x);;
             float iSize = float(textureSize(image, 0).x);;
 
-            float r = SIZE * SIZE / 2.0;
+            float r = SIZE * SIZE;
 
             vec2 bucketPos = (floor(uv * bSize) +  0.5) / bSize;
            

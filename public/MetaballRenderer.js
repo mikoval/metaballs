@@ -29,7 +29,7 @@ function MetaballRenderer(){
             float show = 0.0;
             
 
-            float r =  size * size / 2.0;
+            float r =  size * size;
 
             for(float i = 0.5; i < DIMENSION; i++){
                 for(float j = 0.5; j < DIMENSION; j++){
