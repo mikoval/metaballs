@@ -55,8 +55,8 @@ function MetaballRendererFast(){
            
 
 
-            for(float i =-2.0; i <= 2.0; i++){
-            	for(float j = -2.0; j <= 2.0; j++){
+            for(float i =-5.0; i <= 5.0; i++){
+            	for(float j = -5.0; j <= 5.0; j++){
             		vec2 uv2 = bucketPos + vec2 (i, j)/ bSize;
 	            	vec4 point = texture(bucket, uv2) - 1.0;
             		for(int k = 0; k < 4; k++){
@@ -91,13 +91,19 @@ function MetaballRendererFast(){
 
 
           
-                show = smoothstep(1.0, 1.0-.01, sum);
-            
+		float red = 0.0;
+		float green = 0.0;
+		float blue = 0.0;
 
-
-
-
-				outColor = vec4(vec3(show), 1.0);            
+		if(sum > 1.0){
+			red = log(sum ) * 10.0;
+			green = log(sum) * 10.0;
+			blue = log(sum) * 10.0;
+		}
+		if(sum > 0.8 && sum < 1.0){
+				blue = smoothstep(2.0, .8, sum);;
+			}
+			outColor = vec4(red, green, blue, 1.0);            
         }
         `;
 
