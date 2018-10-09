@@ -16,7 +16,10 @@ function BasicPhysicsSystem(){
         uniform sampler2D pos;
         uniform sampler2D pos_old;
         uniform vec2 res;
-     
+        
+        float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    }
         void main() {
             
 
@@ -32,19 +35,21 @@ function BasicPhysicsSystem(){
                     if(coord2 != coord){
                         vec4 p2 = texelFetch(pos, coord2, 0);
                                    
-                          vec2 diff = p.xy - p2.xy;
+                        vec2 diff = p.xy - p2.xy;
 
 
-                          float dist = abs(length(diff));
+                        float dist = abs(length(diff));
 
 
 
                           
-                          if(dist <= target){
+                        if(dist <= target){
                             float factor = (dist-target)/dist;
-                            p.x -= diff.x * factor * 0.5;
-                            p.y -= diff.y * factor * 0.5;
-                          }
+                            p.x -= diff.x * factor * 0.5 + 0.001 * (rand(uv) - 0.5);
+                            p.y -= diff.y * factor * 0.5 + 0.001 * (rand(uv + 2.0) - 0.5);
+                        }
+
+
 
 
                     }
@@ -138,33 +143,24 @@ function BasicPhysicsSystem(){
         
         void main() {
             vec4 p = texture(pos, uv);
-            vec4 p2 = texture(pos_old, uv); 
-            float dx = (p.x - p2.x) ;
-            float dy = (p.y - p2.y) ;
-            dx *= .99;
-            dy *= .99;
-            dy -= .01;
+  
 
 
             float radius = float(SIZE);
             float aspect = res.x / res.y;
 
-            if(p.x + dx > 1.0 * aspect  - radius){
+            if(p.x > 1.0 * aspect  - radius){
                 p.x = 1.0 * aspect  - radius;
-                p.x += dx;
             }
-            if(p.x + dx< -1.0 *aspect + radius){
+            if(p.x< -1.0 *aspect + radius){
                 p.x = -1.0 * aspect  + radius;
-                p.x += dx;
             }
 
-            if(p.y +  dy > 1.0 - radius ){
+            if(p.y > 1.0 - radius ){
                 p.y = 1.0 - radius ;
-                p.y += dy;
             }
-            if(p.y + dy< -1.0 + radius ){
+            if(p.y< -1.0 + radius ){
                 p.y = -1.0 + radius ;
-                p.y += dy;
             }
 
 
@@ -225,27 +221,18 @@ function BasicPhysicsSystem(){
     }
     this.update = function(){
         this.updatePosition();
-        this.updatePositionOld();
 
-        var tmp = this.particle3;
-        var tmp2 = this.particle4;
-        this.particle3 =  this.particle1;
-        this.particle1 = tmp;
-        this.particle4 =  this.particle2;
-        this.particle2 = tmp2;
-
+ 
         for(var i = 0; i < 5; i++){
+                    this.collision();
                     this.constrain();
-            var tmp = this.particle1;
-            this.particle1 = this.particle3;
-            this.particle3 = tmp;
         }
 
 
 
     }
 
-    this.constrain = function(){
+    this.collision = function(){
         var gl = this.gl;
 
                 /* update position */
@@ -264,6 +251,10 @@ function BasicPhysicsSystem(){
         gl.bindVertexArray(this.constrainVao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        var tmp = this.particle3
+        this.particle3 =  this.particle1;
+        this.particle1 =  tmp;
 
     }
 
@@ -296,14 +287,23 @@ function BasicPhysicsSystem(){
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+
+        var tmp = this.particle3;
+        this.particle3 =  this.particle2;
+        this.particle2 = this.particle1;
+        this.particle1 =  tmp;
+
+
+
+
     }
 
 
-    this.updatePositionOld = function(){
+    this.constrain = function(){
         var gl = this.gl;
 
         /* Update Olds */
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.particle4.fb);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.particle3.fb);
         gl.viewport(0, 0, this.particle4.fb.width, this.particle4.fb.height); 
 
         gl.useProgram(this.updateObjectOld.program);
@@ -313,15 +313,18 @@ function BasicPhysicsSystem(){
         gl.bindTexture(gl.TEXTURE_2D, this.particle1.texture);
         gl.uniform1i(this.updateObjectOld.positionUniform , 0);
 
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.particle2.texture);
-        gl.uniform1i(this.updateObjectOld.positionOldUniform , 1);
+
 
         gl.uniform2f(this.updateObjectOld.positionResUniform , gl.canvas.width, gl.canvas.height);
 
         gl.bindVertexArray(this.updateOldVao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+
+        var tmp = this.particle3
+        this.particle3 =  this.particle1;
+        this.particle1 =  tmp;
 
 
     }
