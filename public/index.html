@@ -8,6 +8,8 @@
 
 <script src="glWindow.js"></script>
 <script src="NoPhysicsSystem.js"></script>
+
+<script src="BasicPhysicsSystem.js"></script>
 <script src="ParticleRenderer.js"></script>
 
 <script src="MetaballRenderer.js"></script>
@@ -126,8 +128,8 @@ canvas {
 </style>
 
 <script>
-    var renderer = new MetaballRendererFast();
-    var system = new NoPhysicsSystem();
+    var renderer = new ParticleRenderer();
+    var system = new BasicPhysicsSystem();
 	var program = new ParticleEngine();
 
     program.setSystem(system);
