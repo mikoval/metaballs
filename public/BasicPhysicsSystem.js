@@ -18,8 +18,8 @@ function BasicPhysicsSystem(){
         uniform vec2 res;
         
         float rand(vec2 co){
-        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-    }
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
         void main() {
             
 
@@ -45,8 +45,10 @@ function BasicPhysicsSystem(){
                           
                         if(dist <= target){
                             float factor = (dist-target)/dist;
-                            p.x -= diff.x * factor * 0.5 + 0.001 * (rand(uv) - 0.5);
-                            p.y -= diff.y * factor * 0.5 + 0.001 * (rand(uv + 2.0) - 0.5);
+                            p.x -= diff.x * factor * 0.3;
+                            p.y -= diff.y * factor * 0.3;
+                            p.x += 0.0001 * (rand(uv + 2.0 * diff) - 0.5);
+                            p.y += 0.0001 * (rand(uv + 1.0 * diff) - 0.5);
                         }
 
 
@@ -78,7 +80,11 @@ function BasicPhysicsSystem(){
         uniform sampler2D pos;
         uniform sampler2D pos_old;
         uniform vec2 res;
-     
+        uniform float time;
+        
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
         void main() {
             vec4 p = texture(pos, uv);
             vec4 p2 = texture(pos_old, uv); 
@@ -92,6 +98,10 @@ function BasicPhysicsSystem(){
 
             p.x += dx;
             p.y += dy;
+
+           // p.x += 0.0 * (rand(uv + 2.0 * time) - 0.5);
+          //  p.y += 0.01 * (rand(uv + 1.0 * time) - 0.5);
+
 
             float radius = float(SIZE);
 
@@ -183,12 +193,15 @@ function BasicPhysicsSystem(){
 
         this.updateObject = {};
 
+        this.count = 0.0;
+
         this.updateObject.program = createProgramFromSources(gl,
              parse(this.vertexUpdate, this.size, this.particleSize), parse(this.fragmentUpdate, this.size, this.particleSize));
         this.updateObject.position = gl.getAttribLocation(this.updateObject.program, "position");
         this.updateObject.positionUniform = gl.getUniformLocation(this.updateObject.program, "pos");
         this.updateObject.positionOldUniform = gl.getUniformLocation(this.updateObject.program, "pos_old");
         this.updateObject.positionResUniform = gl.getUniformLocation(this.updateObject.program, "res");
+        this.updateObject.timeUniform = gl.getUniformLocation(this.updateObject.program, "time");
 
 
         this.updateObjectOld = {};
@@ -220,6 +233,7 @@ function BasicPhysicsSystem(){
         return this.particle1;
     }
     this.update = function(){
+        this.count += 0.1;
         this.updatePosition();
 
  
@@ -277,6 +291,7 @@ function BasicPhysicsSystem(){
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.particle2.texture);
         gl.uniform1i(this.updateObject.positionOldUniform , 1);
+        gl.uniform1f(this.updateObject.timeUniform , this.count);
 
         gl.uniform2f(this.updateObject.positionResUniform , gl.canvas.width, gl.canvas.height);
 
