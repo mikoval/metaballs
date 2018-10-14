@@ -16,10 +16,12 @@ function BasicPhysicsSystem(){
         uniform sampler2D pos;
         uniform sampler2D pos_old;
         uniform vec2 res;
+        uniform vec2 mouse;
+	
         
         float rand(vec2 co){
-        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-    }
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
         void main() {
             
 
@@ -27,7 +29,7 @@ function BasicPhysicsSystem(){
             ivec2 coord = ivec2(floor(uv * size));
             vec4 p = texelFetch(pos, coord, 0);
 
-            float target = 2.0 * SIZE;
+            float target = 3.0 * SIZE;
 
             for(int i = 0; i < int(DIMENSION); i++){
                 for(int j = 0; j < int(DIMENSION); j++){
@@ -43,12 +45,15 @@ function BasicPhysicsSystem(){
 
 
                           
-                        if(dist <= target){
+                        if(dist <= target && dist > .001){
                             float factor = (dist-target)/dist;
-                            p.x -= diff.x * factor * 0.5 + 0.001 * (rand(uv) - 0.5);
-                            p.y -= diff.y * factor * 0.5 + 0.001 * (rand(uv + 2.0) - 0.5);
+                            p.x -= diff.x * factor * 0.1;
+                            p.y -= diff.y * factor * 0.1;
                         }
 
+			else if (dist > target  && dist < target * 10.0){
+			   p.xy -= diff * 0.0000001 * 1.0 / (dist * dist);
+			}
 
 
 
@@ -56,6 +61,25 @@ function BasicPhysicsSystem(){
                 }
             }
 
+		float aspect = res.x / res.y;
+                        vec2 p2 = vec2(mouse.x, mouse.y);
+			p2 = p2 * 2.0 - 1.0;
+			p2.x *= aspect;
+			p2.y *= -1.0;
+                                   
+                        vec2 diff = p.xy - p2.xy;
+
+
+                        float dist = abs(length(diff));
+
+
+
+                         target = 0.2; 
+                        if(dist <= target ){
+                            float factor = (dist-target)/dist;
+                            p.x -= diff.x * factor * 0.01;
+                            p.y -= diff.y * factor * 0.01;
+                        }
             
             outColor = vec4(p);
         }
@@ -78,7 +102,11 @@ function BasicPhysicsSystem(){
         uniform sampler2D pos;
         uniform sampler2D pos_old;
         uniform vec2 res;
-     
+        uniform float time;
+        
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
         void main() {
             vec4 p = texture(pos, uv);
             vec4 p2 = texture(pos_old, uv); 
@@ -86,13 +114,15 @@ function BasicPhysicsSystem(){
             float dy = p.y - p2.y;
             dx *= .99;
             dy *= .99;
-            dy -= .01;
             float aspect = res.x / res.y;
 
 
             p.x += dx;
             p.y += dy;
 
+
+            p.x += 0.001 * (rand(uv + 2.0 * time) - 0.5);
+            p.y += 0.001 * (rand(uv + 1.0 * time) - 0.5);
             float radius = float(SIZE);
 
 
@@ -109,6 +139,7 @@ function BasicPhysicsSystem(){
             }
             if(p.y< -1.0 + radius ){
                 p.y = -1.0 + radius ;
+
             }
 
 
@@ -183,12 +214,15 @@ function BasicPhysicsSystem(){
 
         this.updateObject = {};
 
+        this.count = 0.0;
+
         this.updateObject.program = createProgramFromSources(gl,
              parse(this.vertexUpdate, this.size, this.particleSize), parse(this.fragmentUpdate, this.size, this.particleSize));
         this.updateObject.position = gl.getAttribLocation(this.updateObject.program, "position");
         this.updateObject.positionUniform = gl.getUniformLocation(this.updateObject.program, "pos");
         this.updateObject.positionOldUniform = gl.getUniformLocation(this.updateObject.program, "pos_old");
         this.updateObject.positionResUniform = gl.getUniformLocation(this.updateObject.program, "res");
+        this.updateObject.timeUniform = gl.getUniformLocation(this.updateObject.program, "time");
 
 
         this.updateObjectOld = {};
@@ -206,6 +240,7 @@ function BasicPhysicsSystem(){
         this.constrainObject.position = gl.getAttribLocation(this.constrainObject.program, "position");
         this.constrainObject.positionUniform = gl.getUniformLocation(this.constrainObject.program, "pos");
         this.constrainObject.positionResUniform = gl.getUniformLocation(this.constrainObject.program, "res");
+        this.constrainObject.mouseUniform = gl.getUniformLocation(this.constrainObject.program, "mouse");
 
 
         this.updateVao = createVao(gl, this.updateObject.position);
@@ -220,10 +255,11 @@ function BasicPhysicsSystem(){
         return this.particle1;
     }
     this.update = function(){
+        this.count += 0.1;
         this.updatePosition();
 
  
-        for(var i = 0; i < 5; i++){
+        for(var i = 0; i < 1; i++){
                     this.collision();
                     this.constrain();
         }
@@ -250,6 +286,9 @@ function BasicPhysicsSystem(){
 
         gl.bindVertexArray(this.constrainVao);
 
+
+        gl.uniform2f(this.constrainObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
+	    console.log((this.x/gl.canvas.width) + ", " + (this.y/gl.canvas.height));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
         var tmp = this.particle3
@@ -277,6 +316,7 @@ function BasicPhysicsSystem(){
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.particle2.texture);
         gl.uniform1i(this.updateObject.positionOldUniform , 1);
+        gl.uniform1f(this.updateObject.timeUniform , this.count);
 
         gl.uniform2f(this.updateObject.positionResUniform , gl.canvas.width, gl.canvas.height);
 
@@ -317,6 +357,7 @@ function BasicPhysicsSystem(){
 
         gl.uniform2f(this.updateObjectOld.positionResUniform , gl.canvas.width, gl.canvas.height);
 
+
         gl.bindVertexArray(this.updateOldVao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -329,6 +370,10 @@ function BasicPhysicsSystem(){
 
     }
 
+	this.setMouse = function(x, y){
+		this.x = x;
+		this.y = y;
+	}
 
 
     var ballTexture = function(gl, size){

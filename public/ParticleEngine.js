@@ -1,5 +1,5 @@
-var GRID_SIZE = 32;
-var PARTICLE_SIZE = .05;
+var GRID_SIZE = 64;
+var PARTICLE_SIZE = .005;
 function ParticleEngine(){
     this.gl;
     this.program;
@@ -33,6 +33,7 @@ function ParticleEngine(){
 
         renderer.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
         system.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
+	this.bucketer = new ParticleBucketer(this.ctx, GRID_SIZE, PARTICLE_SIZE);
 
         /* for debug */
         this.imageRenderer = new ImageRenderer();
@@ -78,8 +79,8 @@ function ParticleEngine(){
             this.imageRenderer.draw(state);
         } else {
                         this.renderer.draw(state);
-           // var state = this.renderer.getBucket();
-           // this.imageRenderer.draw(state);
+            //var state = this.renderer.getBucket();
+            //this.imageRenderer.draw(state);
         }
         
     }
@@ -93,7 +94,8 @@ function ParticleEngine(){
         window.onmouseup = function(event) {
     
         };
-        window.onmousemove = function(event) {
+        window.onmousemove = function(event) {	
+		this.system.setMouse(event.x, event.y);
         };
 
         window.ontouchstart = function(event) {

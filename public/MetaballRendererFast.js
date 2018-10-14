@@ -76,6 +76,8 @@ function MetaballRendererFast(){
 
 			            y /= iSize;
 			            x /= iSize;
+			            x += 0.5 / iSize;
+			            y += 0.5 / iSize;
 
 
 			            vec4 val = texture(image, vec2(x, y));
@@ -96,14 +98,12 @@ function MetaballRendererFast(){
 		float blue = 0.0;
 
 		if(sum > 1.0){
-			red = log(sum ) * 10.0;
-			green = log(sum) * 10.0;
-			blue = log(sum) * 10.0;
+			outColor = vec4(1.0);            
+
+		} else {
+		 	outColor = vec4(0.0, 0.0, 0.0, 1.0);            
+
 		}
-		if(sum > 0.8 && sum < 1.0){
-				blue = smoothstep(2.0, .8, sum);;
-			}
-			outColor = vec4(red, green, blue, 1.0);            
         }
         `;
 
@@ -189,9 +189,9 @@ function MetaballRendererFast(){
 		this.bucketObj = new bucketProgram(gl, this.bucketVertex, this.bucketFragment, particleSize, size);
 
 		this.bucketVao = createBucketVao(gl, this.bucketObj.attrPosition, size);
-
-        this.bucketTarget = createRenderTarget(gl, size * 2, size * 2, null);
-        this.bucketTarget2 = createRenderTarget(gl, size * 2, size * 2, null);
+	var mult = 2;
+        this.bucketTarget = createRenderTarget(gl, size * mult, size * mult, null);
+        this.bucketTarget2 = createRenderTarget(gl, size * mult, size * mult, null);
 
 
         this.showParticleObj = new showParticleProgram(gl, this.metaballVertex, this.metaballFragment, particleSize, size);
