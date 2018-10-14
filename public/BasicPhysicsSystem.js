@@ -1,4 +1,61 @@
 function BasicPhysicsSystem(){
+    this.vertexAttraction = `#version 300 es
+        in vec2 position;
+        out vec2 uv;
+        uniform vec2 res;
+        void main() {
+            uv = position; 
+            vec2 position0 = position * 2.0 - 1.0;
+            gl_Position = vec4(position0, 0, 1);
+        }
+        `;    
+    this.fragmentAttraction = `#version 300 es
+        precision highp float;
+        in vec2 uv;
+        out vec4 outColor;
+        uniform sampler2D pos;
+        uniform sampler2D bucket;
+        uniform vec2 res;
+        uniform vec2 mouse;
+    
+        
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+        void main() {
+            float aspect = res.y / res.x;
+
+            float size = float(textureSize(pos, 0).x);
+            float bSize = float(textureSize(bucket, 0).x);
+            ivec2 coord = ivec2(uv * size);
+
+
+            vec4 p = texelFetch(pos, coord, 0);
+
+            vec2 bucketPos = p.xy;
+            bucketPos.x *= aspect;
+            bucketPos = (bucketPos + 1.0)/2.0;
+
+            ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
+
+            vec4 p2 = vec4(0.0, 0.0, 1.0, 0.0);
+
+            vec2 diff = p.xy - p2.xy;
+
+            float dist = length(diff);
+              
+            float mag =  clamp(.001 / (dist ), 0.0, 0.0001);
+                
+                p.x -= diff.x  * mag ;
+                p.y -= diff.y  * mag;
+            
+
+
+            outColor = vec4(p);
+
+    
+        }
+        `;
     this.vertexCollision = `#version 300 es
         in vec2 position;
         out vec2 uv;
@@ -41,10 +98,10 @@ function BasicPhysicsSystem(){
             int ind1 = coord.y * int(size) + coord.x;
 
 
-            float target = 2.0 * SIZE;
+            float target = 3.0 * SIZE;
             int count = 0;
-
-            for(int i = -1; i <= 1 ; i++){
+	    vec2 delta = vec2(0.0);
+            for(int i = -1; i <= 1; i++){
                 for(int j = -1; j <= 1; j++){
 
                     ivec2 bucketPos2 = bucketPosInt + ivec2(i, j);
@@ -93,15 +150,15 @@ function BasicPhysicsSystem(){
                               
                             if(dist <= target){
                                 float factor = (dist-target)/dist;
-                                p.x -= diff.x * factor * 0.1;
-                                p.y -= diff.y * factor * 0.1;
+                                delta.x -= diff.x * factor * 0.01;
+                                delta.y -= diff.y * factor * 0.01;
                             } 
 
                         }
                     
                 }
             }
-
+		p.xy+=delta;
                         vec2 p2 = vec2(mouse.x, mouse.y);
 			p2 = p2 * 2.0 - 1.0;
 			p2.x /= aspect;
@@ -156,8 +213,8 @@ function BasicPhysicsSystem(){
             vec4 p2 = texture(pos_old, uv); 
             float dx = p.x - p2.x;
             float dy = p.y - p2.y;
-            dx *= .99;
-            dy *= .99;
+            dx *= .95;
+            dy *= .95;
             float aspect = res.x / res.y;
 
 
@@ -288,15 +345,28 @@ function BasicPhysicsSystem(){
         this.collisionObject.mouseUniform = gl.getUniformLocation(this.collisionObject.program, "mouse");
         this.collisionObject.bucketUniform = gl.getUniformLocation(this.collisionObject.program, "bucket");
 
+        this.attractionObject = {};
+        this.attractionObject.program = createProgramFromSources(gl, 
+            parse(this.vertexAttraction, this.size, this.particleSize), parse(this.fragmentAttraction, this.size, this.particleSize));
+        this.attractionObject.position = gl.getAttribLocation(this.attractionObject.program, "position");
+        this.attractionObject.positionUniform = gl.getUniformLocation(this.attractionObject.program, "pos");
+        this.attractionObject.positionResUniform = gl.getUniformLocation(this.attractionObject.program, "res");
+        this.attractionObject.mouseUniform = gl.getUniformLocation(this.attractionObject.program, "mouse");
+        this.attractionObject.bucketUniform = gl.getUniformLocation(this.attractionObject.program, "bucket");
+
+
 
         this.updateVao = createVao(gl, this.updateObject.position);
         this.constrainVao = createVao(gl, this.constrainObject.position);
         this.collisionVao = createVao(gl, this.collisionObject.position);
+        this.attractionVao = createVao(gl, this.collisionObject.position);
 
 
 
         this.bucketer = new ParticleBucketer();
         this.bucketer.init(gl, size, particleSize);
+        this.bucketer.initDensityCalculator();
+
     }
 
 
@@ -307,18 +377,50 @@ function BasicPhysicsSystem(){
     this.update = function(){
         this.count += 0.1;
 
-
         this.updatePosition();
        
         this.bucketTarget = this.bucketer.bucket(this.particle1);
 
-        for(var i = 0; i < 1; i++){
-                    this.collision();
-                    this.constrain();
-        }
+
+        
+            for(var i = 0; i < 5 ; i++){
+                this.attract();
+
+                this.collision();
+                this.constrain();
+            }
+        
 
 
 
+    }
+
+    this.attract = function(){
+        var gl = this.gl;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.particle3.fb);
+
+        gl.viewport(0, 0, this.particle3.fb.width, this.particle3.fb.height); 
+
+        gl.useProgram(this.attractionObject.program);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.particle1.texture);
+        gl.uniform1i(this.attractionObject.positionUniform , 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget.texture);
+        gl.uniform1i(this.attractionObject.bucketUniform , 1);
+
+        gl.uniform2f(this.attractionObject.positionResUniform , gl.canvas.width, gl.canvas.height);
+
+        gl.bindVertexArray(this.attractionVao);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        var tmp = this.particle3
+        this.particle3 =  this.particle1;
+        this.particle1 =  tmp;
     }
 
     this.collision = function(){
@@ -346,8 +448,6 @@ function BasicPhysicsSystem(){
 
         gl.uniform2f(this.collisionObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-
 
         var tmp = this.particle3
         this.particle3 =  this.particle1;

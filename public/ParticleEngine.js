@@ -1,4 +1,4 @@
-var GRID_SIZE = 32;
+var GRID_SIZE = 4;
 var PARTICLE_SIZE = .03;
 var show = false;
 function ParticleEngine(){
