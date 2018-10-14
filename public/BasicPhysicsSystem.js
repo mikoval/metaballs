@@ -41,11 +41,11 @@ function BasicPhysicsSystem(){
             int ind1 = coord.y * int(size) + coord.x;
 
 
-            float target = 2.0 * SIZE;
+            float target = 3.0 * SIZE;
             int count = 0;
-
-            for(int i = -1; i <= 1 ; i++){
-                for(int j = -1; j <= 1; j++){
+	    vec2 delta = vec2(0.0);
+            for(int i = -3; i <= 3 ; i++){
+                for(int j = -5; j <= 5; j++){
 
                     ivec2 bucketPos2 = bucketPosInt + ivec2(i, j);
 
@@ -95,21 +95,19 @@ function BasicPhysicsSystem(){
                               
                             if(dist <= target){
                                 float factor = (dist-target)/dist;
-                                p.x -= diff.x * factor * 0.1;
-                                p.y -= diff.y * factor * 0.1;
+                                delta.x -= diff.x * factor * 0.1;
+                                delta.y -= diff.y * factor * 0.1;
                             } 
-
                             else if (dist > target  && dist < target * 10.0){
-                			   p.xy -= diff * 0.0000001 * 1.0 / (dist * dist);
+                			   delta.xy -= diff * 0.00000001 * 1.0 / (dist * dist);
                 			}
-
 
 
                         }
                     
                 }
             }
-
+		p.xy+=delta;
                         vec2 p2 = vec2(mouse.x, mouse.y);
 			p2 = p2 * 2.0 - 1.0;
 			p2.x /= aspect;
@@ -125,8 +123,8 @@ function BasicPhysicsSystem(){
                          target = 0.2; 
                         if(dist <= target ){
                             float factor = (dist-target)/dist;
-                            p.x -= diff.x * factor * 0.01;
-                            p.y -= diff.y * factor * 0.01;
+                            p.x -= diff.x * factor * 0.0001;
+                            p.y -= diff.y * factor * 0.0001;
                         }
             
 
@@ -320,7 +318,7 @@ function BasicPhysicsSystem(){
        
         this.bucketTarget = this.bucketer.bucket(this.particle1);
 
-        for(var i = 0; i < 1; i++){
+        for(var i = 0; i < 50; i++){
                     this.collision();
                     this.constrain();
         }
@@ -353,14 +351,7 @@ function BasicPhysicsSystem(){
 
 
         gl.uniform2f(this.collisionObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
-	    console.log((this.x/gl.canvas.width) + ", " + (this.y/gl.canvas.height));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-        var fb = this.particle4.fb;
-        var pixels = new Float32Array(fb.width * fb.height * 4);
-        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
-        console.log(pixels);
-
 
 
         var tmp = this.particle3
