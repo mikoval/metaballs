@@ -1,5 +1,6 @@
-var GRID_SIZE = 64;
-var PARTICLE_SIZE = .005;
+var GRID_SIZE = 32;
+var PARTICLE_SIZE = .03;
+var show = false;
 function ParticleEngine(){
     this.gl;
     this.program;
@@ -33,7 +34,6 @@ function ParticleEngine(){
 
         renderer.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
         system.init(this.ctx, GRID_SIZE, PARTICLE_SIZE);
-	this.bucketer = new ParticleBucketer(this.ctx, GRID_SIZE, PARTICLE_SIZE);
 
         /* for debug */
         this.imageRenderer = new ImageRenderer();
@@ -78,9 +78,12 @@ function ParticleEngine(){
         if(false){
             this.imageRenderer.draw(state);
         } else {
-                        this.renderer.draw(state);
-            //var state = this.renderer.getBucket();
-            //this.imageRenderer.draw(state);
+            this.renderer.draw(state);
+            if(show){
+                var state = this.system.particle4;
+                this.imageRenderer.draw(state);
+            }
+           
         }
         
     }
@@ -121,6 +124,9 @@ function ParticleEngine(){
                 ctx.renderer = new MetaballRendererFast();
                 console.log(ctx.ctx);
                 ctx.renderer.init(ctx.ctx, GRID_SIZE, PARTICLE_SIZE);
+            }
+            if(event.key == "h"){
+               show = !show;
             }
         };
     }

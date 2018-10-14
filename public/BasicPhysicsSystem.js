@@ -1,5 +1,5 @@
 function BasicPhysicsSystem(){
-    this.vertexConstrain = `#version 300 es
+    this.vertexCollision = `#version 300 es
         in vec2 position;
         out vec2 uv;
         uniform vec2 res;
@@ -9,12 +9,12 @@ function BasicPhysicsSystem(){
             gl_Position = vec4(position0, 0, 1);
         }
         `;    
-    this.fragmentConstrain = `#version 300 es
+    this.fragmentCollision = `#version 300 es
         precision highp float;
         in vec2 uv;
         out vec4 outColor;
         uniform sampler2D pos;
-        uniform sampler2D pos_old;
+        uniform sampler2D bucket;
         uniform vec2 res;
         uniform vec2 mouse;
 	
@@ -23,48 +23,96 @@ function BasicPhysicsSystem(){
             return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
         }
         void main() {
-            
+            float aspect = res.y / res.x;
 
-            float size = DIMENSION;
-            ivec2 coord = ivec2(floor(uv * size));
+            float size = float(textureSize(pos, 0).x);
+            float bSize = float(textureSize(bucket, 0).x);
+            ivec2 coord = ivec2(uv * size);
+
+
             vec4 p = texelFetch(pos, coord, 0);
 
-            float target = 3.0 * SIZE;
+            vec2 bucketPos = p.xy;
+            bucketPos.x *= aspect;
+            bucketPos = (bucketPos + 1.0)/2.0;
 
-            for(int i = 0; i < int(DIMENSION); i++){
-                for(int j = 0; j < int(DIMENSION); j++){
-                    ivec2 coord2 = ivec2(i, j);
-                    if(coord2 != coord){
-                        vec4 p2 = texelFetch(pos, coord2, 0);
-                                   
-                        vec2 diff = p.xy - p2.xy;
+            ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
+
+            int ind1 = coord.y * int(size) + coord.x;
 
 
-                        float dist = abs(length(diff));
+            float target = 2.0 * SIZE;
+            int count = 0;
+
+            for(int i = -1; i <= 1 ; i++){
+                for(int j = -1; j <= 1; j++){
+
+                    ivec2 bucketPos2 = bucketPosInt + ivec2(i, j);
+
+                    vec4 bucketPositions = texelFetch(bucket, bucketPos2, 0) - 1.0;
+
+            
+
+                    for(int k = 0; k < 4; k++){
+                        float current_p = bucketPositions[k];
+
+                            if(current_p < 0.0 || bucketPos2.x < 0 || bucketPos2.y < 0 || bucketPos2.x >= int(bSize) || bucketPos2.y >= int(bSize)){
+
+                                continue;
+                            }
+
+                                float y = floor(current_p/size);
+
+                                float x = current_p - y * size;
+
+                                int ind2 = int(y) * int(size) + int(x);
+
+                                if(ind1 == ind2){
+                                    continue;
+                                }
 
 
 
-                          
-                        if(dist <= target && dist > .001){
-                            float factor = (dist-target)/dist;
-                            p.x -= diff.x * factor * 0.1;
-                            p.y -= diff.y * factor * 0.1;
+
+                                y /= size;
+                                x /= size;
+                                x += 0.5 / size;
+                                y += 0.5 / size;
+
+
+                                vec4 p2 = texture(pos, vec2(x, y));
+
+
+
+                                       
+                            vec2 diff = p.xy - p2.xy;
+
+
+                            float dist = abs(length(diff));
+
+
+
+                              
+                            if(dist <= target){
+                                float factor = (dist-target)/dist;
+                                p.x -= diff.x * factor * 0.1;
+                                p.y -= diff.y * factor * 0.1;
+                            } 
+
+                            else if (dist > target  && dist < target * 10.0){
+                			   p.xy -= diff * 0.0000001 * 1.0 / (dist * dist);
+                			}
+
+
+
                         }
-
-			else if (dist > target  && dist < target * 10.0){
-			   p.xy -= diff * 0.0000001 * 1.0 / (dist * dist);
-			}
-
-
-
-                    }
+                    
                 }
             }
 
-		float aspect = res.x / res.y;
                         vec2 p2 = vec2(mouse.x, mouse.y);
 			p2 = p2 * 2.0 - 1.0;
-			p2.x *= aspect;
+			p2.x /= aspect;
 			p2.y *= -1.0;
                                    
                         vec2 diff = p.xy - p2.xy;
@@ -81,7 +129,11 @@ function BasicPhysicsSystem(){
                             p.y -= diff.y * factor * 0.01;
                         }
             
+
             outColor = vec4(p);
+
+           //outColor = vec4(count, 0.0, 0.0, 0.0);
+    
         }
         `;
     this.vertexUpdate = `#version 300 es
@@ -121,8 +173,9 @@ function BasicPhysicsSystem(){
             p.y += dy;
 
 
-            p.x += 0.001 * (rand(uv + 2.0 * time) - 0.5);
-            p.y += 0.001 * (rand(uv + 1.0 * time) - 0.5);
+            p.x += 0.00 * (rand(uv + 2.0 * time) - 0.5);
+            p.y += 0.00 * (rand(uv + 1.0 * time) - 0.5);
+
             float radius = float(SIZE);
 
 
@@ -148,7 +201,7 @@ function BasicPhysicsSystem(){
         }
         `;
 
-    this.vertexUpdateOld = `#version 300 es
+    this.vertexConstrain = `#version 300 es
         precision mediump float;
         in vec2 position;
         out vec2 uv;
@@ -162,7 +215,7 @@ function BasicPhysicsSystem(){
         }
         `;
 
-    this.fragmentUpdateOld = `#version 300 es
+    this.fragmentConstrain = `#version 300 es
         precision mediump float;
         in vec2 uv;
         out vec4 outColor;
@@ -225,28 +278,33 @@ function BasicPhysicsSystem(){
         this.updateObject.timeUniform = gl.getUniformLocation(this.updateObject.program, "time");
 
 
-        this.updateObjectOld = {};
-        this.updateObjectOld.program = createProgramFromSources(gl, 
-            parse(this.vertexUpdateOld, this.size, this.particleSize), parse(this.fragmentUpdateOld, this.size, this.particleSize));
-        this.updateObjectOld.position = gl.getAttribLocation(this.updateObjectOld.program, "position");
-        this.updateObjectOld.positionUniform = gl.getUniformLocation(this.updateObjectOld.program, "pos");
-        this.updateObjectOld.positionOldUniform = gl.getUniformLocation(this.updateObjectOld.program, "pos_old");
-        this.updateObjectOld.positionResUniform = gl.getUniformLocation(this.updateObjectOld.program, "res");
-
-
         this.constrainObject = {};
         this.constrainObject.program = createProgramFromSources(gl, 
             parse(this.vertexConstrain, this.size, this.particleSize), parse(this.fragmentConstrain, this.size, this.particleSize));
         this.constrainObject.position = gl.getAttribLocation(this.constrainObject.program, "position");
         this.constrainObject.positionUniform = gl.getUniformLocation(this.constrainObject.program, "pos");
+        this.constrainObject.positionOldUniform = gl.getUniformLocation(this.constrainObject.program, "pos_old");
         this.constrainObject.positionResUniform = gl.getUniformLocation(this.constrainObject.program, "res");
-        this.constrainObject.mouseUniform = gl.getUniformLocation(this.constrainObject.program, "mouse");
+
+
+        this.collisionObject = {};
+        this.collisionObject.program = createProgramFromSources(gl, 
+            parse(this.vertexCollision, this.size, this.particleSize), parse(this.fragmentCollision, this.size, this.particleSize));
+        this.collisionObject.position = gl.getAttribLocation(this.collisionObject.program, "position");
+        this.collisionObject.positionUniform = gl.getUniformLocation(this.collisionObject.program, "pos");
+        this.collisionObject.positionResUniform = gl.getUniformLocation(this.collisionObject.program, "res");
+        this.collisionObject.mouseUniform = gl.getUniformLocation(this.collisionObject.program, "mouse");
+        this.collisionObject.bucketUniform = gl.getUniformLocation(this.collisionObject.program, "bucket");
 
 
         this.updateVao = createVao(gl, this.updateObject.position);
-        this.updateOldVao = createVao(gl, this.updateObjectOld.position);
         this.constrainVao = createVao(gl, this.constrainObject.position);
+        this.collisionVao = createVao(gl, this.collisionObject.position);
 
+
+
+        this.bucketer = new ParticleBucketer();
+        this.bucketer.init(gl, size, particleSize);
     }
 
 
@@ -256,9 +314,12 @@ function BasicPhysicsSystem(){
     }
     this.update = function(){
         this.count += 0.1;
-        this.updatePosition();
 
- 
+
+        this.updatePosition();
+       
+        this.bucketTarget = this.bucketer.bucket(this.particle1);
+
         for(var i = 0; i < 1; i++){
                     this.collision();
                     this.constrain();
@@ -276,24 +337,36 @@ function BasicPhysicsSystem(){
 
         gl.viewport(0, 0, this.particle3.fb.width, this.particle3.fb.height); 
 
-        gl.useProgram(this.constrainObject.program);
+        gl.useProgram(this.collisionObject.program);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.particle1.texture);
-        gl.uniform1i(this.constrainObject.positionUniform , 0);
+        gl.uniform1i(this.collisionObject.positionUniform , 0);
 
-        gl.uniform2f(this.constrainObject.positionResUniform , gl.canvas.width, gl.canvas.height);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget.texture);
+        gl.uniform1i(this.collisionObject.bucketUniform , 1);
 
-        gl.bindVertexArray(this.constrainVao);
+        gl.uniform2f(this.collisionObject.positionResUniform , gl.canvas.width, gl.canvas.height);
+
+        gl.bindVertexArray(this.collisionVao);
 
 
-        gl.uniform2f(this.constrainObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
+        gl.uniform2f(this.collisionObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
 	    console.log((this.x/gl.canvas.width) + ", " + (this.y/gl.canvas.height));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        var fb = this.particle4.fb;
+        var pixels = new Float32Array(fb.width * fb.height * 4);
+        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
+        console.log(pixels);
+
+
 
         var tmp = this.particle3
         this.particle3 =  this.particle1;
         this.particle1 =  tmp;
+
 
     }
 
@@ -346,19 +419,19 @@ function BasicPhysicsSystem(){
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.particle3.fb);
         gl.viewport(0, 0, this.particle4.fb.width, this.particle4.fb.height); 
 
-        gl.useProgram(this.updateObjectOld.program);
+        gl.useProgram(this.constrainObject.program);
 
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.particle1.texture);
-        gl.uniform1i(this.updateObjectOld.positionUniform , 0);
+        gl.uniform1i(this.constrainObject.positionUniform , 0);
 
 
 
-        gl.uniform2f(this.updateObjectOld.positionResUniform , gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(this.constrainObject.positionResUniform , gl.canvas.width, gl.canvas.height);
 
 
-        gl.bindVertexArray(this.updateOldVao);
+        gl.bindVertexArray(this.constrainVao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 
