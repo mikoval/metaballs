@@ -51,8 +51,6 @@ function BasicPhysicsSystem(){
 
                     vec4 bucketPositions = texelFetch(bucket, bucketPos2, 0) - 1.0;
 
-            
-
                     for(int k = 0; k < 4; k++){
                         float current_p = bucketPositions[k];
 
@@ -61,26 +59,26 @@ function BasicPhysicsSystem(){
                                 continue;
                             }
 
-                                float y = floor(current_p/size);
+                            float y = floor(current_p/size);
 
-                                float x = current_p - y * size;
+                            float x = current_p - y * size;
 
-                                int ind2 = int(y) * int(size) + int(x);
+                            int ind2 = int(y) * int(size) + int(x);
 
-                                if(ind1 == ind2){
-                                    continue;
-                                }
-
-
+                            if(ind1 == ind2){
+                                continue;
+                            }
 
 
-                                y /= size;
-                                x /= size;
-                                x += 0.5 / size;
-                                y += 0.5 / size;
 
 
-                                vec4 p2 = texture(pos, vec2(x, y));
+                            y /= size;
+                            x /= size;
+                            x += 0.5 / size;
+                            y += 0.5 / size;
+
+
+                            vec4 p2 = texture(pos, vec2(x, y));
 
 
 
@@ -88,7 +86,7 @@ function BasicPhysicsSystem(){
                             vec2 diff = p.xy - p2.xy;
 
 
-                            float dist = abs(length(diff));
+                            float dist = length(diff);
 
 
 
@@ -98,12 +96,6 @@ function BasicPhysicsSystem(){
                                 p.x -= diff.x * factor * 0.1;
                                 p.y -= diff.y * factor * 0.1;
                             } 
-
-                            else if (dist > target  && dist < target * 10.0){
-                			   p.xy -= diff * 0.0000001 * 1.0 / (dist * dist);
-                			}
-
-
 
                         }
                     
@@ -353,13 +345,7 @@ function BasicPhysicsSystem(){
 
 
         gl.uniform2f(this.collisionObject.mouseUniform , this.x/gl.canvas.width, this.y/gl.canvas.height);
-	    console.log((this.x/gl.canvas.width) + ", " + (this.y/gl.canvas.height));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-        var fb = this.particle4.fb;
-        var pixels = new Float32Array(fb.width * fb.height * 4);
-        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
-        console.log(pixels);
 
 
 
