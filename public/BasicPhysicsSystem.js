@@ -38,17 +38,22 @@ function BasicPhysicsSystem(){
 
             ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
 
-            vec4 p2 = vec4(0.0, 0.0, 10000.0, 0.0);
+            vec2 delta = vec2(0.0);
+            for(int i = -5; i <=5; i++){
+                for(int j = -3; j <=3; j++){
+                    vec4 p2 = vec4(float(i)/2.0, float(j)/3.0, 1.0, 0.0);
 
-            vec2 diff = p.xy - p2.xy;
+                    vec2 diff = p.xy - p2.xy;
 
-            float dist = length(diff);
-              
-            float mag =  clamp(p2.z * .000001 / (dist * dist ), 0.0, 0.001);
-                
-                p.x -= diff.x  * mag ;
-                p.y -= diff.y  * mag;
-            
+                    float dist = length(diff);
+                  
+                    float mag =  p2.z * clamp(.00001 / (dist * dist * dist * dist), 0.0, 0.01);
+                    
+                    delta -= diff  * mag;
+                }
+            }
+           
+            p.xy += delta;
 
 
             outColor = vec4(p);
