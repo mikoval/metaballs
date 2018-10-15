@@ -37,8 +37,8 @@ function MetaballRendererFast(){
            
 
 
-            for(float i =-3.0; i <= 3.0; i++){
-            	for(float j = -3.0; j <= 3.0; j++){
+            for(float i =-5.0; i <= 5.0; i++){
+            	for(float j = -5.0; j <= 5.0; j++){
             		ivec2 uv2 = bucketPos  + ivec2 (i, j);
 	            	vec4 point = texelFetch(bucket, uv2, 0) - 1.0;
             		for(int k = 0; k < 4; k++){

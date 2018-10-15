@@ -38,13 +38,13 @@ function BasicPhysicsSystem(){
 
             ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
 
-            vec4 p2 = vec4(0.0, 0.0, 1.0, 0.0);
+            vec4 p2 = vec4(0.0, 0.0, 10000.0, 0.0);
 
             vec2 diff = p.xy - p2.xy;
 
             float dist = length(diff);
               
-            float mag =  clamp(.001 / (dist ), 0.0, 0.0001);
+            float mag =  clamp(p2.z * .000001 / (dist * dist ), 0.0, 0.001);
                 
                 p.x -= diff.x  * mag ;
                 p.y -= diff.y  * mag;
@@ -222,8 +222,8 @@ function BasicPhysicsSystem(){
             p.y += dy;
 
 
-            p.x += 0.00 * (rand(uv + 2.0 * time) - 0.5);
-            p.y += 0.00 * (rand(uv + 1.0 * time) - 0.5);
+            p.x += 0.0 * (rand(uv + 2.0 * time) - 0.5);
+            p.y += 0.0 * (rand(uv + 1.0 * time) - 0.5);
 
             float radius = float(SIZE);
 
@@ -383,12 +383,15 @@ function BasicPhysicsSystem(){
 
 
         
-            for(var i = 0; i < 5 ; i++){
+            for(var i = 0; i < 1 ; i++){
                 this.attract();
 
-                this.collision();
-                this.constrain();
-            }
+		    for(var j = 0; j < 50 ; j++){
+
+			this.collision();
+			this.constrain();
+		    }
+	    }
         
 
 
