@@ -18,14 +18,8 @@ function DensityBucketCalculator(){
         uniform vec2 res;
 
         void main() {
-        
-            float aspect = res.x / res.y;
-
-            vec2 pos = uv.xy * 2.0 - 1.0;
-
-            pos.x *= aspect;
-
-            outColor = vec4(pos, 1.0, 0.0);
+    
+            outColor = vec4(0.0, 0.0, 100.0, 0.0);
 
         }
         `;
@@ -42,7 +36,6 @@ function DensityBucketCalculator(){
 		this.densityVao = createDensityVao(gl, this.densityObj.attrPosition);
 
         var mag = Math.floor(bucketSize/scale);
-
         this.densityTarget = createRenderTarget(gl, mag, mag, null);
 	}
 
@@ -64,7 +57,7 @@ function DensityBucketCalculator(){
         gl.bindTexture(gl.TEXTURE_2D, bucket.texture);
         gl.uniform1i(this.densityObj.bucketUniform , 1);
 
-        gl.uniform2f(this.densityObj.uniformRes , gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(this.densityObj.positionResUniform , gl.canvas.width, gl.canvas.height);
 
         gl.bindVertexArray(this.densityVao);
 

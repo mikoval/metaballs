@@ -39,9 +39,18 @@ function BasicPhysicsSystem(){
             ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
 
             vec2 delta = vec2(0.0);
-            for(int i = -5; i <=5; i++){
-                for(int j = -3; j <=3; j++){
-                    vec4 p2 = vec4(float(i)/2.0, float(j)/3.0, 1.0, 0.0);
+            for(int i = -1; i <= 1; i++){
+                for(int j = -1; j <= 1; j++){
+                    ivec2 focusBucket = bucketPosInt + ivec2(i, j);
+
+                    if(focusBucket.x < 0 || focusBucket.y < 0 || focusBucket.x >= int(bSize) || focusBucket.y >= int(bSize)){
+                        continue;
+                    }
+
+
+
+                    vec4 p2 = texelFetch(bucket, focusBucket, 0);
+
 
                     vec2 diff = p.xy - p2.xy;
 
@@ -50,6 +59,8 @@ function BasicPhysicsSystem(){
                     float mag =  p2.z * clamp(.00001 / (dist * dist * dist * dist), 0.0, 0.01);
                     
                     delta -= diff  * mag;
+                    
+                    
                 }
             }
            
@@ -385,6 +396,7 @@ function BasicPhysicsSystem(){
         this.updatePosition();
        
         this.bucketTarget = this.bucketer.bucket(this.particle1);
+        this.densityTexture = this.bucketer.computeDensity(this.bucketTarget, this.particle1);
 
 
         
@@ -417,7 +429,7 @@ function BasicPhysicsSystem(){
         gl.uniform1i(this.attractionObject.positionUniform , 0);
 
         gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.bucketTarget.texture);
+        gl.bindTexture(gl.TEXTURE_2D, this.densityTexture.texture);
         gl.uniform1i(this.attractionObject.bucketUniform , 1);
 
         gl.uniform2f(this.attractionObject.positionResUniform , gl.canvas.width, gl.canvas.height);
