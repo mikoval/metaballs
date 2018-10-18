@@ -56,7 +56,7 @@ function BasicPhysicsSystem(){
 
                     float dist = length(diff);
                   
-                    float mag =  p2.z * clamp(.00001 / (dist * dist * dist * dist), 0.0, 0.01);
+                    float mag =  p2.z * clamp(.00001 / (dist * dist), 0.0, 0.01);
                     
                     delta -= diff  * mag;
                     

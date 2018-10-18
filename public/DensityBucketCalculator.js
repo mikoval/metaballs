@@ -16,16 +16,60 @@ function DensityBucketCalculator(){
         uniform sampler2D pos;
         uniform sampler2D bucket;
         uniform vec2 res;
+        uniform vec2 b_res;
+
 
         void main() {
         
             float aspect = res.x / res.y;
 
-            vec2 pos = uv.xy * 2.0 - 1.0;
 
-            pos.x *= aspect;
+            vec2 p = uv * vec2(float(b_res.x), float(b_res.y));
+            ivec2 ipos = ivec2(floor(p));
 
-            outColor = vec4(pos, 1.0, 0.0);
+            ivec2 bStart = ipos * ivec2(WIDTH, HEIGHT);
+
+            float count = 0.0;
+
+            ivec2 tmp = ivec2(0.0);
+
+            float iSize = float(textureSize(pos, 0).x);;
+
+            vec2 avg = vec2(0.0);
+
+            for(int i = 0; i < WIDTH; i++){
+                for(int j = 0; j < HEIGHT; j++){
+                    ivec2 ind = bStart + ivec2(i, j);
+                    vec4 particle_ind = texelFetch(bucket, ivec2(ind), 0) - 1.0;
+                    for(int k = 0; k < 4; k++){
+                        float p = particle_ind[k];
+                        if(particle_ind[k] >= 0.0){
+                            float y = floor(p/iSize);
+
+                            float x = p - y * iSize;
+
+                            y /= iSize;
+                            x /= iSize;
+                            x += 0.5 / iSize;
+                            y += 0.5 / iSize;
+
+                            vec4 val = texture(pos, vec2(x, y));
+
+                            avg += val.xy;
+
+                            count++;
+                        }
+                    }                
+                        
+                }
+            }
+
+            if(count > 0.0){
+                avg /= count;
+
+            }
+
+            outColor = vec4(avg, count, 0.0);
 
         }
         `;
@@ -37,11 +81,14 @@ function DensityBucketCalculator(){
 		this.bucketSize = bucketSize;
 
 
+        var mag = Math.floor(bucketSize/scale);
 
-		this.densityObj = new densityProgram(gl, this.densityVertex, this.densityFragment);
+        this.densityRes = mag;
+
+		this.densityObj = new densityProgram(gl, this.densityVertex, this.parse(this.densityFragment, this.scale));
 		this.densityVao = createDensityVao(gl, this.densityObj.attrPosition);
 
-        var mag = Math.floor(bucketSize/scale);
+       
 
         this.densityTarget = createRenderTarget(gl, mag, mag, null);
 	}
@@ -65,11 +112,18 @@ function DensityBucketCalculator(){
         gl.uniform1i(this.densityObj.bucketUniform , 1);
 
         gl.uniform2f(this.densityObj.uniformRes , gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(this.densityObj.uniformSize , this.densityRes, this.densityRes);
 
         gl.bindVertexArray(this.densityVao);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         
+        var fb = this.densityTarget.fb;
+        var pixels = new Float32Array(fb.width * fb.height * 4);
+        gl.readPixels(0, 0, fb.width, fb.height, gl.RGBA, gl.FLOAT, pixels); 
+        console.log(pixels);
+
+
         return this.densityTarget;
     }
 
@@ -109,10 +163,11 @@ function DensityBucketCalculator(){
     	this.program = createProgramFromSources(gl,vertex,fragment);
 
     	this.attrPosition = gl.getAttribLocation(this.program, "position");
-    	this.uniformImage = gl.getUniformLocation(this.program, "image");
-        this.uniformImage2 = gl.getUniformLocation(this.program, "current");
+    	this.bucketUniform = gl.getUniformLocation(this.program, "bucket");
+        this.positionUniform = gl.getUniformLocation(this.program, "pos");
 
         this.uniformRes = gl.getUniformLocation(this.program, "res");
+        this.uniformSize = gl.getUniformLocation(this.program, "b_res");
 
         console.log(this.uniformRes);
     }
@@ -188,5 +243,10 @@ function DensityBucketCalculator(){
 
         
         return {texture: texture, fb: fb};
+    }
+
+    this.parse = function(string, mag){
+        var str =  string.replace(/WIDTH/g, mag).replace(/HEIGHT/g, mag);
+        return str;
     }
 }
