@@ -79,7 +79,7 @@ function MetaballRendererFast(){
     		float green = 0.0;
     		float blue = 0.0;
 
-    		if(sum > 1.0){
+    		if(sum > 0.1){
     			outColor = vec4(1.0);            
 
     		} else {

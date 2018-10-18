@@ -54,9 +54,9 @@ function BasicPhysicsSystem(){
 
                     vec2 diff = p.xy - p2.xy;
 
-                    float dist = length(diff) * 10.0;
+                    float dist = length(diff) * 100.0;
                   
-                    float mag =  sqrt(sqrt(sqrt(p2.z))) * clamp(.0001 / (dist * dist * dist), 0.0, 0.0001);
+                    float mag =  pow(p2.z, .05) * clamp(.1 / (dist * dist * dist), 0.0, 0.001);
                     
                     delta -= diff  * mag;
                     
@@ -166,8 +166,8 @@ function BasicPhysicsSystem(){
                               
                             if(dist <= target){
                                 float factor = (dist-target)/dist;
-                                delta.x -= diff.x * factor * 0.01;
-                                delta.y -= diff.y * factor * 0.01;
+                                delta.x -= diff.x * factor * 0.03;
+                                delta.y -= diff.y * factor * 0.03;
                             } 
 
                         }
@@ -229,8 +229,8 @@ function BasicPhysicsSystem(){
             vec4 p2 = texture(pos_old, uv); 
             float dx = p.x - p2.x;
             float dy = p.y - p2.y;
-            dx *= .95;
-            dy *= .95;
+            dx *= .9;
+            dy *= .9;
             float aspect = res.x / res.y;
 
 
@@ -400,10 +400,10 @@ function BasicPhysicsSystem(){
 
 
         
-            for(var i = 0; i < 3 ; i++){
+            for(var i = 0; i < 5 ; i++){
                 this.attract();
 
-		    for(var j = 0; j < 20 ; j++){
+		    for(var j = 0; j < 10 ; j++){
 
 			this.collision();
 			this.constrain();

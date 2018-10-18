@@ -117,7 +117,7 @@ function ParticleBucketer(){
 
     this.initDensityCalculator = function(){
         this.densityCalculator = new DensityBucketCalculator();
-        this.densityCalculator.init(this.gl, this.bucketSize, 10);
+        this.densityCalculator.init(this.gl, this.bucketSize, 30);
     }
 
     this.computeDensity = function(bucket, positions){
