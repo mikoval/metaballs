@@ -39,8 +39,8 @@ function BasicPhysicsSystem(){
             ivec2 bucketPosInt = ivec2(floor(bucketPos * bSize));
 
             vec2 delta = vec2(0.0);
-            for(int i = -1; i <= 1; i++){
-                for(int j = -1; j <= 1; j++){
+            for(int i = -3; i <= 3; i++){
+                for(int j = -3; j <= 3; j++){
                     ivec2 focusBucket = bucketPosInt + ivec2(i, j);
 
                     if(focusBucket.x < 0 || focusBucket.y < 0 || focusBucket.x >= int(bSize) || focusBucket.y >= int(bSize)){
@@ -54,9 +54,9 @@ function BasicPhysicsSystem(){
 
                     vec2 diff = p.xy - p2.xy;
 
-                    float dist = length(diff);
+                    float dist = length(diff) * 10.0;
                   
-                    float mag =  p2.z * clamp(.00001 / (dist * dist), 0.0, 0.01);
+                    float mag =  sqrt(sqrt(sqrt(p2.z))) * clamp(.0001 / (dist * dist * dist), 0.0, 0.0001);
                     
                     delta -= diff  * mag;
                     
@@ -400,10 +400,10 @@ function BasicPhysicsSystem(){
 
 
         
-            for(var i = 0; i < 1 ; i++){
+            for(var i = 0; i < 3 ; i++){
                 this.attract();
 
-		    for(var j = 0; j < 50 ; j++){
+		    for(var j = 0; j < 20 ; j++){
 
 			this.collision();
 			this.constrain();
